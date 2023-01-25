@@ -1,9 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NewsBook.Data;
 using NewsBook.Models;
 using NewsBook.Models.Paging;
-using System.Xml.Linq;
 
 namespace NewsBook.Repository
 {
