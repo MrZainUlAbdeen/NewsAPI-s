@@ -31,7 +31,8 @@ namespace NewsBook
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            builder.Services.AddDbContext<DatabaseContext>(options => options.UseInMemoryDatabase("DbNews"));
+            builder.Services.AddDbContext<DatabaseContext>(options => options.UseSqlServer("server=.;database=newsdb;trusted_connection=true;Encrypt=False"));
+            //builder.Services.AddDbContext<DatabaseContext>(options => options.UseInMemoryDatabase("DbNews"));
             // configure strongly typed settings object
             builder.Services.Configure<AppSettingsDTO>(builder.Configuration.GetSection("appsettings"));
 
