@@ -6,11 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NewsBook.Data;
 using NewsBook.ModelDTO;
+using NewsBook.Models;
 using NewsBook.Models.Paging;
 using NewsBook.Repository;
-using System.ComponentModel;
-using System.Linq;
-using System.Security.Claims;
 
 namespace NewsBook.Controllers
 {
@@ -29,7 +27,7 @@ namespace NewsBook.Controllers
             _favouriteNews = favouriteNews;
         }
 
-        //Get All News
+        
         [HttpGet]
         
         public async Task<IActionResult> Get([FromQuery] NewsParameters newsParameters)

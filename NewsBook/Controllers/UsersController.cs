@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using NewsBook.Authorization;
 using NewsBook.Data;
 using NewsBook.ModelDTO;
+using NewsBook.Models;
 using NewsBook.Repository;
-using System.Xml.Linq;
+using AllowAnonymousAttribute = NewsBook.Authorization.AllowAnonymousAttribute;
+using AuthorizeAttribute = NewsBook.Authorization.AuthorizeAttribute;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace NewsBook.Controllers
 {
@@ -13,36 +15,36 @@ namespace NewsBook.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
+        private readonly DatabaseContext _dbContext;
         private IUsersRepository _usersRepository;
-        private IJwtUtils _jWTAuthentiation;
-        public UsersController(
-            IUsersRepository usersRepository,
-            IJwtUtils jWTAuthentiation
-        )
-        {
-            _usersRepository = usersRepository;
-            _jWTAuthentiation = jWTAuthentiation;
-        }
+        private IJwtUtils _jwtUtils;
 
+        public UsersController(IUsersRepository usersRepository, DatabaseContext dbContext, IJwtUtils jwtUtils)
+        {
+            _jwtUtils= jwtUtils;
+            _dbContext = dbContext;
+            _usersRepository = usersRepository;
+        }
+        [Authorize(Role.admin)]
         [HttpGet]
         public async Task<IActionResult> Get()
         {
             return Ok(await _usersRepository.GetAll());
         }
-
+        [Authorize(Role.admin)]
         [HttpGet("{Id}")]
         public async Task<IActionResult> Get(Guid Id)
         {
             return Ok(await _usersRepository.GetById(Id));
         }
-
+        [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] UserWriteDTO UserDTO)
         {
             var user = await _usersRepository.Insert(UserDTO.Name, UserDTO.Email, UserDTO.Password);
             return Ok(user);
         }
-
+        [Authorize(Role.user)]
         [HttpPut("{Id}")]
         public async Task<IActionResult> Put(Guid Id, [FromBody] UserWriteDTO UserDTO)
         {
@@ -58,7 +60,7 @@ namespace NewsBook.Controllers
             user = await _usersRepository.Update(user);
             return Ok(user);
         }
-
+        [Authorize(Role.admin)]
         [HttpDelete("{Id}")]
         public async Task<IActionResult> Delete(Guid Id)
         {
@@ -73,14 +75,15 @@ namespace NewsBook.Controllers
 
         [AllowAnonymous]
         [HttpPost("authenticate")]
-        public IActionResult Authenticate([FromBody] UserAuthenicaticationDTO user)
+        public async Task<IActionResult> Authenticate(UserAuthenticationDTO user)
         {
-            var token = _jWTAuthentiation.GenerateToken(user);
-            if (token == null)
+            var _user = await _dbContext.Users.SingleOrDefaultAsync(x => x.Email == user.Email && x.Password == user.Password);
+            if (_user == null)
             {
-                return Unauthorized();
+                return BadRequest("Invalid Email/Password");
             }
-            return Ok(token);
+            var jwtToken = _jwtUtils.GenerateToken(_user);
+            return Ok(jwtToken);
         }
 
     }
