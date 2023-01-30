@@ -25,13 +25,13 @@ namespace NewsBook.Controllers
             _dbContext = dbContext;
             _usersRepository = usersRepository;
         }
-        [Authorize(Role.admin)]
+        //[Authorize(Role.admin)]
         [HttpGet]
         public async Task<IActionResult> Get()
         {
             return Ok(await _usersRepository.GetAll());
         }
-        [Authorize(Role.admin)]
+        //[Authorize(Role.admin)]
         [HttpGet("{Id}")]
         public async Task<IActionResult> Get(Guid Id)
         {
@@ -44,7 +44,7 @@ namespace NewsBook.Controllers
             var user = await _usersRepository.Insert(UserDTO.Name, UserDTO.Email, UserDTO.Password);
             return Ok(user);
         }
-        [Authorize(Role.user)]
+        //[Authorize(Role.user)]
         [HttpPut("{Id}")]
         public async Task<IActionResult> Put(Guid Id, [FromBody] UserWriteDTO UserDTO)
         {
@@ -60,7 +60,7 @@ namespace NewsBook.Controllers
             user = await _usersRepository.Update(user);
             return Ok(user);
         }
-        [Authorize(Role.admin)]
+        //[Authorize(Role.admin)]
         [HttpDelete("{Id}")]
         public async Task<IActionResult> Delete(Guid Id)
         {

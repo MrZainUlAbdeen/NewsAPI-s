@@ -17,8 +17,8 @@ namespace NewsBook.Repository
             var news = new News()
             {
                 Id = Guid.NewGuid(),
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now,
+                //CreatedAt = DateTime.Now,
+                //UpdatedAt = DateTime.Now,
                 Title = Tittle,
                 Description = Description
             };
@@ -29,7 +29,7 @@ namespace NewsBook.Repository
 
         public async Task<News> Update(News news)
         {
-            news.UpdatedAt = DateTime.Now;
+            //news.UpdatedAt = DateTime.Now;
             await dbContext.SaveChangesAsync();
             return news;
         }
@@ -75,8 +75,8 @@ namespace NewsBook.Repository
                     Id = news.Id,
                     Title = news.Title,
                     Description = news.Description,
-                    CreatedAt = news.CreatedAt,
-                    UpdatedAt = news.UpdatedAt
+                    //CreatedAt = news.CreatedAt,
+                    //UpdatedAt = news.UpdatedAt
                 }
             );
 

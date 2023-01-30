@@ -64,8 +64,8 @@ namespace NewsBook.Repository
                 UserId = userId,
                 NewsId = newsId,
                 IsFavorite = isFavourite,
-                CreatedAt = new DateTime(),
-                UpdatedAt = new DateTime()
+                //CreatedAt = new DateTime(),
+                //UpdatedAt = new DateTime()
             };
             await dbContext.FavouriteNews.AddAsync(favouriteNews);
             await dbContext.SaveChangesAsync();
@@ -75,7 +75,7 @@ namespace NewsBook.Repository
 
         public async Task<FavouriteNews> Update(FavouriteNews favouriteNews)
         {
-            favouriteNews.UpdatedAt = DateTime.Now;
+            //favouriteNews.UpdatedAt = DateTime.Now;
             await dbContext.SaveChangesAsync();
             return favouriteNews;
         }

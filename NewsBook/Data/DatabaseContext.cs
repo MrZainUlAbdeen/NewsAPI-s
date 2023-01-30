@@ -1,9 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using EntityFrameworkCore.Triggers;
+using Microsoft.EntityFrameworkCore;
 using NewsBook.Models;
 
 namespace NewsBook.Data
 {
-    public class DatabaseContext : DbContext
+    public class DatabaseContext : DbContextWithTriggers
     {
         private readonly IConfiguration Configuration;
         public DatabaseContext(DbContextOptions options, IConfiguration configuration) : base(options)

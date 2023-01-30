@@ -18,23 +18,34 @@ namespace NewsBook.Repository
         }
         public async Task<User> Insert(string Name, string Email, string Password)
         {
-            var user = new User()
+            using var transaction = dbContext.Database.BeginTransaction();
+            try
             {
-                Id = Guid.NewGuid(),
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now,
-                Name = Name,
-                Email = Email,
-                Password = Password
-            };
-            await dbContext.Users.AddAsync(user);
-            await dbContext.SaveChangesAsync();
-            return user;
+                var user = new User()
+                {
+                    //Id = Guid.NewGuid(),
+                    //CreatedAt = DateTime.Now,
+                    //UpdatedAt = DateTime.Now,
+                    Name = Name,
+                    Email = Email,
+                    Password = Password
+                };
+                await dbContext.Users.AddAsync(user);
+                await dbContext.SaveChangesAsync();
+                transaction.Commit();
+                return user;
+            }
+            catch(Exception ex)
+            {
+                transaction.Rollback();
+                return null;
+            }
+            
         }
 
         public async Task<User> Update(User user)
         {
-            user.UpdatedAt = DateTime.Now;
+            //user.UpdatedAt = DateTime.Now;
             await dbContext.SaveChangesAsync();
             return user;
         }
