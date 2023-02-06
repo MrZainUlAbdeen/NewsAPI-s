@@ -1,5 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NewsBook.Data;
+using NewsBook.IdentityServices;
+using NewsBook.ModelDTO;
+using NewsBook.ModelDTO.News;
 using NewsBook.Models;
 using NewsBook.Models.Paging;
 
@@ -8,19 +11,19 @@ namespace NewsBook.Repository
     public class NewsRepository : NewsBase<News>, INewsRepository
     {
         private readonly DatabaseContext dbContext;
-        public NewsRepository(DatabaseContext newsContext) : base(newsContext)
+        private readonly IIdentityServices _identityServices;
+        public NewsRepository(DatabaseContext newsContext, IIdentityServices identityServices) : base(newsContext)
         {
+            _identityServices = identityServices;
             dbContext = newsContext;
         }
         public async Task<News> Insert(string Tittle, string Description)
         {
             var news = new News()
             {
-                Id = Guid.NewGuid(),
-                //CreatedAt = DateTime.Now,
-                //UpdatedAt = DateTime.Now,
                 Title = Tittle,
-                Description = Description
+                Description = Description,
+                UserId = _identityServices.GetUserId() ?? Guid.Empty,
             };
             await dbContext.News.AddAsync(news);
             await dbContext.SaveChangesAsync();
@@ -29,12 +32,11 @@ namespace NewsBook.Repository
 
         public async Task<News> Update(News news)
         {
-            //news.UpdatedAt = DateTime.Now;
             await dbContext.SaveChangesAsync();
             return news;
         }
 
-       
+
         public async Task<News> Delete(Guid Id)
         {
             var news = await GetById(Id);
@@ -47,7 +49,7 @@ namespace NewsBook.Repository
             return news;
         }
 
-        
+
 
         public async Task<List<News>> GetAll()
         {
@@ -61,42 +63,31 @@ namespace NewsBook.Repository
 
         public Task<PagedList<News>> GetAll(NewsParameters newsParameters)
         {
-            return Task.FromResult(PagedList<News>.ToPagedList(FindAll().OrderBy(N => N.Id), newsParameters.PageNumber, newsParameters.PageSize));
+            return Task.FromResult(PagedList<News>.ToPagedList(
+                FindAll().OrderBy(N => N.CreatedAt), newsParameters.PageNumber, newsParameters.PageSize)
+            );
         }
 
-        public async Task<List<News>> GetFavouriteNews(Guid UserId)
+        public async Task<List<News>> GetFavouriteNews()
         {
+            var UserId = _identityServices.GetUserId() ?? Guid.Empty;
             var favouriteNews = (
-                from news in dbContext.News
-                join fNews in dbContext.FavouriteNews
-                on news.Id equals fNews.NewsId
-                where fNews.IsFavorite == true && fNews.UserId == UserId
-                select new News() { 
-                    Id = news.Id,
-                    Title = news.Title,
-                    Description = news.Description,
-                    //CreatedAt = news.CreatedAt,
-                    //UpdatedAt = news.UpdatedAt
-                }
+               from news in dbContext.News
+               join fNews in dbContext.FavouriteNews
+               on news.Id equals fNews.NewsId
+               where fNews.IsFavorite == true && fNews.UserId == UserId
+               select new News ()
+               {
+                   Id = news.Id,
+                   Title = news.Title,
+                   Description = news.Description,
+                   UserId = UserId,
+                   CreatedAt = news.CreatedAt,
+                   UpdatedAt = news.UpdatedAt
+               }
             );
 
             return await favouriteNews.ToListAsync();
         }
-
-        //public async Task<News> Create(PostNews postnews)
-        //{
-        //    var news = new News()
-        //    {
-        //        Id = Guid.NewGuid(),
-        //        Tittle = postnews.Tittle,
-        //        Describtion = postnews.Describtion,
-        //        CreatedAt = DateTime.Now,
-        //        UpdatedAt = DateTime.Now,
-
-        //    };
-        //    await newsContext.News.AddAsync(news);
-        //    await newsContext.SaveChangesAsync();
-        //    return news;
-        //}
     }
 }

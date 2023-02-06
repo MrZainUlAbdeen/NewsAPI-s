@@ -45,6 +45,11 @@ namespace NewsBook.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("NewsId");
+
+                    b.HasIndex("UserId", "NewsId")
+                        .IsUnique();
+
                     b.ToTable("FavouriteNews");
                 });
 
@@ -68,7 +73,12 @@ namespace NewsBook.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("News");
                 });
@@ -103,6 +113,48 @@ namespace NewsBook.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("NewsBook.Models.FavouriteNews", b =>
+                {
+                    b.HasOne("NewsBook.Models.News", "News")
+                        .WithMany("FavouriteNews")
+                        .HasForeignKey("NewsId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("NewsBook.Models.User", "User")
+                        .WithMany("FavouriteNews")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("News");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("NewsBook.Models.News", b =>
+                {
+                    b.HasOne("NewsBook.Models.User", "User")
+                        .WithMany("News")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("NewsBook.Models.News", b =>
+                {
+                    b.Navigation("FavouriteNews");
+                });
+
+            modelBuilder.Entity("NewsBook.Models.User", b =>
+                {
+                    b.Navigation("FavouriteNews");
+
+                    b.Navigation("News");
                 });
 #pragma warning restore 612, 618
         }

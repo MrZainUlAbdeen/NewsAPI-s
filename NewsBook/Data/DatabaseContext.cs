@@ -14,5 +14,11 @@ namespace NewsBook.Data
         public DbSet<News> News { get; set; }
         public DbSet<FavouriteNews> FavouriteNews { get; set; }
         public DbSet<User> Users { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.ApplyConfiguration(new FavouriteNewsConfiguration());
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
+        }
     }
 }

@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NewsBook.Authorization;
 using NewsBook.Data;
-using NewsBook.ModelDTO;
+using NewsBook.IdentityServices;
+using NewsBook.ModelDTO.User;
 using NewsBook.Models;
 using NewsBook.Repository;
 using AllowAnonymousAttribute = NewsBook.Authorization.AllowAnonymousAttribute;
@@ -16,22 +18,33 @@ namespace NewsBook.Controllers
     public class UsersController : ControllerBase
     {
         private readonly DatabaseContext _dbContext;
-        private IUsersRepository _usersRepository;
-        private IJwtUtils _jwtUtils;
+        private readonly IUsersRepository _usersRepository;
+        private readonly IJwtUtils _jwtUtils;
+        private readonly IIdentityServices _identityServices;
+        private IMapper _mapper;
 
-        public UsersController(IUsersRepository usersRepository, DatabaseContext dbContext, IJwtUtils jwtUtils)
+        public UsersController(
+            IUsersRepository usersRepository,
+            DatabaseContext dbContext, 
+            IJwtUtils jwtUtils, 
+            IIdentityServices identityServices,
+            IMapper mapper
+            )
         {
+            _mapper = mapper;
+            _identityServices= identityServices;
             _jwtUtils= jwtUtils;
             _dbContext = dbContext;
             _usersRepository = usersRepository;
         }
-        //[Authorize(Role.admin)]
+        [Authorize(Role.admin)]
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            return Ok(await _usersRepository.GetAll());
+            var user = await _usersRepository.GetAll();
+            return Ok(_mapper.Map<List<UserReadDTO>>(user));
         }
-        //[Authorize(Role.admin)]
+        [Authorize(Role.admin)]
         [HttpGet("{Id}")]
         public async Task<IActionResult> Get(Guid Id)
         {
@@ -42,9 +55,9 @@ namespace NewsBook.Controllers
         public async Task<IActionResult> Post([FromBody] UserWriteDTO UserDTO)
         {
             var user = await _usersRepository.Insert(UserDTO.Name, UserDTO.Email, UserDTO.Password);
-            return Ok(user);
+            return Ok(_mapper.Map<UserReadDTO>(user));
         }
-        //[Authorize(Role.user)]
+        [Authorize(Role.user)]
         [HttpPut("{Id}")]
         public async Task<IActionResult> Put(Guid Id, [FromBody] UserWriteDTO UserDTO)
         {
@@ -60,7 +73,7 @@ namespace NewsBook.Controllers
             user = await _usersRepository.Update(user);
             return Ok(user);
         }
-        //[Authorize(Role.admin)]
+        [Authorize(Role.admin)]
         [HttpDelete("{Id}")]
         public async Task<IActionResult> Delete(Guid Id)
         {
@@ -86,6 +99,11 @@ namespace NewsBook.Controllers
             return Ok(jwtToken);
         }
 
+        [HttpGet("loginUserId")]
+        public async Task<IActionResult> UserId()
+        {
+            return Ok(_identityServices.GetUserId() ?? Guid.Empty);
+        }
     }
 }
 

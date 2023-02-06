@@ -6,14 +6,9 @@ namespace NewsBook.Models
 {
     public abstract class TrackableBaseEntity
     {
-        public Guid Id { get; private set; }
-        //[DataType(DataType.Date)]
-        //[JsonPropertyName("startDateTime")]
-        public DateTime CreatedAt { get; private set; }
-        //[DataType(DataType.Date)]
-        //[JsonPropertyName("startDateTime")]
-        public DateTime UpdatedAt { get; private set; }
-
+        public Guid Id { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
         static TrackableBaseEntity()
         {
             Triggers<TrackableBaseEntity>.Inserting += entry => entry.Entity.Id = Guid.NewGuid();

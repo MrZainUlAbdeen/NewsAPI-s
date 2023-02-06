@@ -1,51 +1,31 @@
-﻿
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NewsBook.Data;
 using NewsBook.Models;
-
 namespace NewsBook.Repository
 {
     public class UsersRepository : IUsersRepository
     {
         private readonly DatabaseContext dbContext;
-        //private IJwtUtils _jwtUtils;
-        
+       
         public UsersRepository(DatabaseContext dbContext)
         {
-            //_appSettings= appSettings;
-            //_jwtUtils= jwtUtils;
             this.dbContext = dbContext;
         }
         public async Task<User> Insert(string Name, string Email, string Password)
         {
-            using var transaction = dbContext.Database.BeginTransaction();
-            try
+            var user = new User()
             {
-                var user = new User()
-                {
-                    //Id = Guid.NewGuid(),
-                    //CreatedAt = DateTime.Now,
-                    //UpdatedAt = DateTime.Now,
-                    Name = Name,
-                    Email = Email,
-                    Password = Password
-                };
-                await dbContext.Users.AddAsync(user);
-                await dbContext.SaveChangesAsync();
-                transaction.Commit();
-                return user;
+                Name = Name,
+                Email = Email,
+                Password = Password
+            };
+            await dbContext.Users.AddAsync(user);
+            await dbContext.SaveChangesAsync();
+            return user;
             }
-            catch(Exception ex)
-            {
-                transaction.Rollback();
-                return null;
-            }
-            
-        }
 
         public async Task<User> Update(User user)
         {
-            //user.UpdatedAt = DateTime.Now;
             await dbContext.SaveChangesAsync();
             return user;
         }
@@ -62,12 +42,14 @@ namespace NewsBook.Repository
 
         public async Task<List<User>> GetAll()
         {
+            
             return await dbContext.Users.ToListAsync();
         }
 
         public async Task<User> GetById(Guid Id)
         {
-            return await dbContext.Users.FindAsync(Id);
+            var user = await dbContext.Users.FindAsync(Id);
+            return user;
         }
 
         public  Task<User> GetByFilters(string Email, string Password)
@@ -75,10 +57,4 @@ namespace NewsBook.Repository
            throw new NotImplementedException();
         }
     }
-//    var user = dbContext.Users.FirstOrDefault(x => x.Email == Email && x.Password == Password);
-//            if (user == null)
-//            {
-//                return null;
-//            }
-//return GetByFilters(user.Name, user.Email);
 }

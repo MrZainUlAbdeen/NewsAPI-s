@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NewsBook.Data;
+using NewsBook.IdentityServices;
 using NewsBook.Models;
 
 namespace NewsBook.Repository
@@ -9,8 +10,15 @@ namespace NewsBook.Repository
         private readonly DatabaseContext dbContext;
         private readonly INewsRepository newsRepository;
         private readonly IUsersRepository usersRepository;
-        public FavouriteNewsRespository(DatabaseContext dbContext, INewsRepository newsRepository, IUsersRepository usersRepository)
+        private readonly IIdentityServices _identityServices;
+        public FavouriteNewsRespository(
+            DatabaseContext dbContext,
+            INewsRepository newsRepository,
+            IUsersRepository usersRepository,
+            IIdentityServices identityServices
+            )
         {
+            _identityServices= identityServices;
             this.dbContext = dbContext;
             this.newsRepository = newsRepository;
             this.usersRepository = usersRepository;
@@ -36,16 +44,16 @@ namespace NewsBook.Repository
             );
         }
 
-        public async Task<FavouriteNews> Insert(Guid newsId, Guid userId, bool isFavourite=true)
+        public async Task<FavouriteNews> Insert(Guid newsId, bool isFavourite=true)
         {
             var news = await newsRepository.GetById(newsId);
-            var user = await usersRepository.GetById(userId);
-            if (user == null)
+            var userId = _identityServices.GetUserId() ?? Guid.Empty;
+            if (userId.Equals(null))
             {
                 throw new Exception("UserId does not exists");
             }
 
-            if (news == null)
+            if (news.Equals(null))
             {
                 throw new Exception("NewsId does not exists");
             }
@@ -60,12 +68,9 @@ namespace NewsBook.Repository
 
             favouriteNews = new FavouriteNews()
             {
-                Id = Guid.NewGuid(),
                 UserId = userId,
                 NewsId = newsId,
                 IsFavorite = isFavourite,
-                //CreatedAt = new DateTime(),
-                //UpdatedAt = new DateTime()
             };
             await dbContext.FavouriteNews.AddAsync(favouriteNews);
             await dbContext.SaveChangesAsync();
@@ -75,7 +80,6 @@ namespace NewsBook.Repository
 
         public async Task<FavouriteNews> Update(FavouriteNews favouriteNews)
         {
-            //favouriteNews.UpdatedAt = DateTime.Now;
             await dbContext.SaveChangesAsync();
             return favouriteNews;
         }

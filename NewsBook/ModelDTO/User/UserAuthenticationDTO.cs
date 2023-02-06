@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace NewsBook.ModelDTO
+namespace NewsBook.ModelDTO.User
 {
     public class UserAuthenticationDTO
     {

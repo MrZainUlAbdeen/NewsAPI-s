@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NewsBook.Data;
-using NewsBook.ModelDTO;
+using NewsBook.Authorization;
+using NewsBook.IdentityServices;
+using NewsBook.ModelDTO.FavouriteNews;
+using NewsBook.ModelDTO.FavouriteNewsReadDTO;
+using NewsBook.ModelDTO.News;
 using NewsBook.Models;
 using NewsBook.Models.Paging;
 using NewsBook.Repository;
@@ -18,16 +17,18 @@ namespace NewsBook.Controllers
     {
         private readonly INewsRepository _newsRepository;
         private readonly IFavouriteNewsRespository _favouriteNews;
+        private IMapper _mapper;
+
         public NewsController(
             INewsRepository newsRepository, 
-            IFavouriteNewsRespository favouriteNews
-        )
+            IFavouriteNewsRespository favouriteNews,
+            IMapper mapper
+            )
         {
+            _mapper = mapper;
             _newsRepository = newsRepository;
             _favouriteNews = favouriteNews;
         }
-
-        
         [HttpGet]
         
         public async Task<IActionResult> Get([FromQuery] NewsParameters newsParameters)
@@ -50,17 +51,16 @@ namespace NewsBook.Controllers
                 return NotFound(Id);
             }
         }
-
+        [Authorize]
         //Post News
         [HttpPost]
         public async Task<IActionResult> Post(NewsWriteDTO newsDTO)
         {
-            var user = await _newsRepository.Insert(newsDTO.Tittle, newsDTO.Description);
-            return Ok(user);
+            var news = await _newsRepository.Insert(newsDTO.Tittle, newsDTO.Description);
+            return Ok(_mapper.Map<NewsReadDTO>(news));
         }
         [HttpPut]
         [Route("{Id:guid}")]
-        //[Route("search/{title}")]
         public async Task<IActionResult> Put(Guid Id, [FromBody] NewsWriteDTO NewsDTO)
         {
 
@@ -88,25 +88,39 @@ namespace NewsBook.Controllers
 
             return Ok(await _newsRepository.Delete(Id));
         }
-
+        [Authorize]
         [HttpPost]
         [Route("MarkFavourite")]
         public async Task<IActionResult> MarkFavourite([FromBody] FavouriteNewsWriteDTO FavouriteNewsDTO)
         {
             var favouriteNews = await _favouriteNews.Insert(
-                FavouriteNewsDTO.NewsId, 
-                FavouriteNewsDTO.UserId, 
+                FavouriteNewsDTO.NewsId,
                 FavouriteNewsDTO.IsFavourite
             );
-            return Ok(favouriteNews);
+            return Ok(_mapper.Map<FavouriteNewsReadDTO>(favouriteNews));
         }
-
+        
+        [Authorize]
         [HttpGet]
         [Route("Favourite")]
-        public async Task<IActionResult> GetFavouriteNews([FromQuery] Guid UserId)
+        public async Task<IActionResult> GetFavouriteNews()
         {
-            var news = await _newsRepository.GetFavouriteNews(UserId);
-            return Ok(news);
+            //NOTE: Solution to map object to another object
+            //var news = (await _newsRepository.GetFavouriteNews())
+            //    .Select(
+            //        newsDTO => new NewsReadDTO
+            //        {
+            //            NewsId = newsDTO.Id,
+            //            UserId = newsDTO.UserId,
+            //            Title = newsDTO.Title,
+            //            Description = newsDTO.Description,
+            //            CreatedAt = newsDTO.CreatedAt,
+            //            UpdatedAt = newsDTO.UpdatedAt
+            //        }
+            //    );
+            //return Ok(news);
+            var news = (await _newsRepository.GetFavouriteNews());
+            return Ok(_mapper.Map<List<NewsReadDTO>>(news));
         }
     }
 }

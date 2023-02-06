@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using NewsBook.Controllers;
-using NewsBook.Helpers;
-using NewsBook.ModelDTO;
+using NewsBook.Data;
 using NewsBook.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -15,10 +13,10 @@ namespace NewsBook.Authorization
         public string? GenerateToken(User user);
         public Guid? ValidateToken(string token);
     }
-    public class JwtUtils : IJwtUtils
+    public class JWTService : IJwtUtils
     {
         private readonly AppSettingsDTO _appSettings;
-        public JwtUtils(IOptions<AppSettingsDTO> appSettings)
+        public JWTService(IOptions<AppSettingsDTO> appSettings)
         {
             _appSettings = appSettings.Value;
         }
@@ -30,7 +28,7 @@ namespace NewsBook.Authorization
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[] { new Claim("UserId", user.Id.ToString()) }),
-                Expires = DateTime.UtcNow.AddMinutes(1),
+                Expires = DateTime.UtcNow.AddMinutes(_appSettings.TokenLifeTimeInMinutes),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -41,7 +39,7 @@ namespace NewsBook.Authorization
 
         public Guid? ValidateToken(string token)
         {
-            if (token == null)
+            if (token == string.Empty)
                 return null;
 
             var tokenHandler = new JwtSecurityTokenHandler();
