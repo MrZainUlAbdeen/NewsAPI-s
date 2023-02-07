@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using NewsBook.Authorization;
-using NewsBook.IdentityServices;
 using NewsBook.ModelDTO.FavouriteNews;
 using NewsBook.ModelDTO.FavouriteNewsReadDTO;
 using NewsBook.ModelDTO.News;
@@ -17,7 +16,7 @@ namespace NewsBook.Controllers
     {
         private readonly INewsRepository _newsRepository;
         private readonly IFavouriteNewsRespository _favouriteNews;
-        private IMapper _mapper;
+        private readonly IMapper _mapper;
 
         public NewsController(
             INewsRepository newsRepository, 
@@ -29,30 +28,45 @@ namespace NewsBook.Controllers
             _newsRepository = newsRepository;
             _favouriteNews = favouriteNews;
         }
+
         [HttpGet]
-        
-        public async Task<IActionResult> Get([FromQuery] NewsParameters newsParameters)
+        public async Task<IActionResult> Get(
+            [FromQuery] bool usePaging, 
+            [FromQuery] PagingParameters pagingParameters
+            )
         {
-            var _news = await _newsRepository.GetAll(newsParameters);
-            return Ok(_news);
+            if (usePaging == true)
+            {
+                var pagedNews = await _newsRepository.GetAll(pagingParameters);
+                var pagedNewsDTO = new PagedList<NewsReadDTO>
+                {
+                    Items = _mapper.Map<List<NewsReadDTO>>(pagedNews.Items),
+                    TotalCount = pagedNews.TotalCount,
+                    TotalPages = pagedNews.TotalPages,
+                    CurrentPage = pagedNews.CurrentPage,
+                    PageSize = pagedNews.PageSize
+                };
+                return Ok(pagedNewsDTO);
+            }
+            var news = await _newsRepository.GetAll();
+            return Ok(_mapper.Map<List<NewsReadDTO>>(news));
         }
 
         [HttpGet]
-        [Route("{Id}")]
-        public async Task<IActionResult> Get(Guid Id)
+        [Route("{id}")]
+        public async Task<IActionResult> Get(Guid id)
         {
-            var getById = await _newsRepository.GetById(Id);
+            var getById = await _newsRepository.GetById(id);
             if (getById != null)
             {
                 return Ok(getById);
             }
             else
             {
-                return NotFound(Id);
+                return NotFound(id);
             }
         }
         [Authorize]
-        //Post News
         [HttpPost]
         public async Task<IActionResult> Post(NewsWriteDTO newsDTO)
         {
@@ -60,18 +74,17 @@ namespace NewsBook.Controllers
             return Ok(_mapper.Map<NewsReadDTO>(news));
         }
         [HttpPut]
-        [Route("{Id:guid}")]
-        public async Task<IActionResult> Put(Guid Id, [FromBody] NewsWriteDTO NewsDTO)
+        [Route("{id:guid}")]
+        public async Task<IActionResult> Put(Guid id, [FromBody] NewsWriteDTO newsDTO)
         {
-
-            var news = await _newsRepository.GetById(Id);
+            var news = await _newsRepository.GetById(id);
             if (news == null)
             {
-                return BadRequest(Id);
+                return BadRequest(id);
             }
 
-            news.Title = NewsDTO.Tittle;
-            news.Description = NewsDTO.Description;
+            news.Title = newsDTO.Tittle;
+            news.Description = newsDTO.Description;
 
             news = await _newsRepository.Update(news);
             return Ok(news);
@@ -90,37 +103,53 @@ namespace NewsBook.Controllers
         }
         [Authorize]
         [HttpPost]
-        [Route("MarkFavourite")]
-        public async Task<IActionResult> MarkFavourite([FromBody] FavouriteNewsWriteDTO FavouriteNewsDTO)
+        [Route("markfavourite")]
+        public async Task<IActionResult> MarkFavourite([FromBody] FavouriteNewsWriteDTO favouriteNewsDTO)
         {
             var favouriteNews = await _favouriteNews.Insert(
-                FavouriteNewsDTO.NewsId,
-                FavouriteNewsDTO.IsFavourite
+                favouriteNewsDTO.NewsId,
+                favouriteNewsDTO.IsFavourite
             );
             return Ok(_mapper.Map<FavouriteNewsReadDTO>(favouriteNews));
         }
-        
-        [Authorize]
+
+        [AllowAnonymous]
         [HttpGet]
-        [Route("Favourite")]
-        public async Task<IActionResult> GetFavouriteNews()
+        [Route("favourite")]
+        public async Task<IActionResult> GetFavouriteNews(
+            [FromQuery] bool usePaging, 
+            [FromQuery] PagingParameters pagingParameters
+            )
         {
-            //NOTE: Solution to map object to another object
-            //var news = (await _newsRepository.GetFavouriteNews())
-            //    .Select(
-            //        newsDTO => new NewsReadDTO
-            //        {
-            //            NewsId = newsDTO.Id,
-            //            UserId = newsDTO.UserId,
-            //            Title = newsDTO.Title,
-            //            Description = newsDTO.Description,
-            //            CreatedAt = newsDTO.CreatedAt,
-            //            UpdatedAt = newsDTO.UpdatedAt
-            //        }
-            //    );
-            //return Ok(news);
-            var news = (await _newsRepository.GetFavouriteNews());
-            return Ok(_mapper.Map<List<NewsReadDTO>>(news));
+            if (usePaging == true)
+            {
+                //NOTE: Solution to map object to another object
+                //var news = (await _newsRepository.GetFavouriteNews())
+                //    .Select(
+                //        newsDTO => new NewsReadDTO
+                //        {
+                //            NewsId = newsDTO.Id,
+                //            UserId = newsDTO.UserId,
+                //            Title = newsDTO.Title,
+                //            Description = newsDTO.Description,
+                //            CreatedAt = newsDTO.CreatedAt,
+                //            UpdatedAt = newsDTO.UpdatedAt
+                //        }
+                //    );
+                //return Ok(news);
+                var pagedFavouriteNews = await _newsRepository.GetFavouriteNews(pagingParameters);
+                var pagedNewsDTO = new PagedList<NewsReadDTO>
+                {
+                    Items = _mapper.Map<List<NewsReadDTO>>(pagedFavouriteNews.Items),
+                    TotalCount = pagedFavouriteNews.TotalCount,
+                    TotalPages = pagedFavouriteNews.TotalPages,
+                    CurrentPage = pagedFavouriteNews.CurrentPage,
+                    PageSize = pagedFavouriteNews.PageSize
+                };
+                return Ok(pagedNewsDTO);
+            }
+            var favouriteNews = await _newsRepository.GetFavouriteNews();
+            return Ok(_mapper.Map<List<NewsReadDTO>>(favouriteNews));
         }
     }
 }

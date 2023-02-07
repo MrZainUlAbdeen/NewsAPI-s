@@ -4,8 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using NewsBook.Authorization;
 using NewsBook.Data;
 using NewsBook.IdentityServices;
+using NewsBook.ModelDTO.News;
 using NewsBook.ModelDTO.User;
 using NewsBook.Models;
+using NewsBook.Models.Paging;
 using NewsBook.Repository;
 using AllowAnonymousAttribute = NewsBook.Authorization.AllowAnonymousAttribute;
 using AuthorizeAttribute = NewsBook.Authorization.AuthorizeAttribute;
@@ -37,70 +39,89 @@ namespace NewsBook.Controllers
             _dbContext = dbContext;
             _usersRepository = usersRepository;
         }
-        [Authorize(Role.admin)]
+
+        [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get(
+            [FromQuery] bool usePaging, 
+            [FromQuery] PagingParameters pagingParameters
+            )
         {
+            if(usePaging == true)
+            {
+                var pagedUser = await _usersRepository.GetAll(pagingParameters);
+                var pagedUsersDTO = new PagedList<UserReadDTO>
+                {
+                    Items = _mapper.Map<List<UserReadDTO>>(pagedUser.Items),
+                    TotalCount = pagedUser.TotalCount,
+                    TotalPages = pagedUser.TotalPages,
+                    CurrentPage = pagedUser.CurrentPage,
+                    PageSize = pagedUser.PageSize
+                };
+                return Ok(pagedUsersDTO);
+            }
             var user = await _usersRepository.GetAll();
             return Ok(_mapper.Map<List<UserReadDTO>>(user));
         }
+
         [Authorize(Role.admin)]
-        [HttpGet("{Id}")]
-        public async Task<IActionResult> Get(Guid Id)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(Guid id)
         {
-            return Ok(await _usersRepository.GetById(Id));
+            return Ok(await _usersRepository.GetById(id));
         }
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] UserWriteDTO UserDTO)
+        public async Task<IActionResult> Post([FromBody] UserWriteDTO userDTO)
         {
-            var user = await _usersRepository.Insert(UserDTO.Name, UserDTO.Email, UserDTO.Password);
-            return Ok(_mapper.Map<UserReadDTO>(user));
-        }
-        [Authorize(Role.user)]
-        [HttpPut("{Id}")]
-        public async Task<IActionResult> Put(Guid Id, [FromBody] UserWriteDTO UserDTO)
-        {
-            var user = await _usersRepository.GetById(Id);
-            if (user == null) {
-                return BadRequest(Id);
+            var email = await _dbContext.Users.FirstOrDefaultAsync(value => value.Email.Equals(userDTO.Email));
+            if(email == null)
+            {
+                var user = await _usersRepository.Insert(userDTO.Name, userDTO.Email, userDTO.Password);
+                return Ok(_mapper.Map<UserReadDTO>(user));
             }
-
-            user.Name = UserDTO.Name;
-            user.Email = UserDTO.Email;
-            user.Password = UserDTO.Password;
-
-            user = await _usersRepository.Update(user);
-            return Ok(user);
+            return BadRequest("Email already Exist");
+        }
+        [AllowAnonymous]
+        [HttpPut]
+        public async Task<IActionResult> Put(
+            [FromBody] UserWriteDTO userDTO
+            )
+        {
+            var userId = _identityServices.GetUserId() ?? Guid.Empty;
+            if (userId.Equals(_usersRepository.GetById(userId))) 
+            {
+                await _usersRepository.Insert(userDTO.Name, userDTO.Email, userDTO.Password);
+                return Ok(userId);
+            }
+            return BadRequest("User not found");
         }
         [Authorize(Role.admin)]
-        [HttpDelete("{Id}")]
-        public async Task<IActionResult> Delete(Guid Id)
+        [HttpDelete]
+        [Route("delete")]
+        public async Task<IActionResult> Delete()
         {
-            var user = await _usersRepository.GetById(Id);
-            if (user == null)
-            {
-                return BadRequest(Id);
-            }
-
-            return Ok(await _usersRepository.Delete(Id));
+            var userId = _identityServices.GetUserId() ?? Guid.Empty;
+            return Ok(await _usersRepository.Delete(userId));
         }
 
         [AllowAnonymous]
         [HttpPost("authenticate")]
-        public async Task<IActionResult> Authenticate(UserAuthenticationDTO user)
+        public async Task<IActionResult> Authenticate(UserAuthenticationDTO userAuthentication)
         {
-            var _user = await _dbContext.Users.SingleOrDefaultAsync(x => x.Email == user.Email && x.Password == user.Password);
-            if (_user == null)
+            var user = await _dbContext.Users.SingleOrDefaultAsync(
+                x => x.Email == userAuthentication.Email && x.Password == userAuthentication.Password
+                );
+            if (user == null)
             {
                 return BadRequest("Invalid Email/Password");
             }
-            var jwtToken = _jwtUtils.GenerateToken(_user);
+            var jwtToken = _jwtUtils.GenerateToken(user);
             return Ok(jwtToken);
         }
 
         [HttpGet("loginUserId")]
-        public async Task<IActionResult> UserId()
+        public IActionResult UserId()
         {
             return Ok(_identityServices.GetUserId() ?? Guid.Empty);
         }

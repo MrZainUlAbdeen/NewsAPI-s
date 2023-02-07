@@ -3,15 +3,13 @@ using NewsBook.Models;
 
 namespace NewsBook.Repository
 {
-    public interface IFavouriteNewsRespository
+    public interface IFavouriteNewsRespository : IBaseRepository<FavouriteNews>
     {
-        Task<FavouriteNews> Insert(Guid newsId, bool isFavourite=true);
+        Task<FavouriteNews> Insert(Guid newsId, bool isFavourite = true);
         Task<FavouriteNews> Update(FavouriteNews favouriteNews);
         Task<FavouriteNews?> Delete(Guid Id);
-        Task<List<FavouriteNews>> GetAll();
+        Task<PagedList<FavouriteNews>> GetAll(PagingParameters newsParameters);
         Task<FavouriteNews?> GetById(Guid Id);
         Task<FavouriteNews?> GetByFilters(Guid newsId, Guid userId);
-
-        
     }
 }

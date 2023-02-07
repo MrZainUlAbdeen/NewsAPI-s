@@ -3,18 +3,18 @@ using NewsBook.Data;
 
 namespace NewsBook.Repository
 {
-    public class NewsBase<T> : INewsBase<T> where T : class
+    public class NewsBase<T> : IBaseRepository<T> where T : class
     {
-        protected DatabaseContext newsContext { get; set; }
+        protected DatabaseContext _dbContext { get; set; }
         public NewsBase(DatabaseContext newsContext)
         {
-            this.newsContext = newsContext;
+            _dbContext = newsContext;
         }
         
         public IQueryable<T> FindAll()
         {
 
-            return this.newsContext.Set<T>().AsNoTracking();
+            return _dbContext.Set<T>().AsNoTracking();
         }
     }
 }
