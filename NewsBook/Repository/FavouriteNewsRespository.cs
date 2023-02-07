@@ -1,51 +1,57 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NewsBook.Data;
+using NewsBook.IdentityServices;
 using NewsBook.Models;
+using NewsBook.Models.Paging;
 
 namespace NewsBook.Repository
 {
-    public class FavouriteNewsRespository : IFavouriteNewsRespository
+    public class FavouriteNewsRespository : NewsBase<FavouriteNews>, IFavouriteNewsRespository
     {
-        private readonly DatabaseContext dbContext;
-        private readonly INewsRepository newsRepository;
-        private readonly IUsersRepository usersRepository;
-        public FavouriteNewsRespository(DatabaseContext dbContext, INewsRepository newsRepository, IUsersRepository usersRepository)
+        private readonly DatabaseContext _dbContext;
+        private readonly INewsRepository _newsRepository;
+        private readonly IIdentityServices _identityServices;
+        public FavouriteNewsRespository(
+            DatabaseContext dbContext,
+            INewsRepository newsRepository,
+            IIdentityServices identityServices
+            ) : base( dbContext )
         {
-            this.dbContext = dbContext;
-            this.newsRepository = newsRepository;
-            this.usersRepository = usersRepository;
+            _identityServices= identityServices;
+            _dbContext = dbContext;
+            _newsRepository = newsRepository;
         }
 
-        public async Task<FavouriteNews?> Delete(Guid Id)
+        public async Task<FavouriteNews?> Delete(Guid id)
         {
-            var favouriteNews = await GetById(Id);
+            var favouriteNews = await GetById(id);
             if (favouriteNews != null)
             {
-                dbContext.FavouriteNews.Remove(favouriteNews);
+                _dbContext.FavouriteNews.Remove(favouriteNews);
             }
 
-            await dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
             return favouriteNews;
         }
 
         public async Task<FavouriteNews?> GetByFilters(Guid newsId, Guid userId)
         {
 
-            return await dbContext.FavouriteNews.SingleOrDefaultAsync(
+            return await _dbContext.FavouriteNews.SingleOrDefaultAsync(
                 favouriteNews => favouriteNews.NewsId == newsId && favouriteNews.UserId == userId
             );
         }
 
-        public async Task<FavouriteNews> Insert(Guid newsId, Guid userId, bool isFavourite=true)
+        public async Task<FavouriteNews> Insert(Guid newsId, bool isFavourite = true)
         {
-            var news = await newsRepository.GetById(newsId);
-            var user = await usersRepository.GetById(userId);
-            if (user == null)
+            var news = await _newsRepository.GetById(newsId);
+            var userId = _identityServices.GetUserId() ?? Guid.Empty;
+            if (userId.Equals(null))
             {
                 throw new Exception("UserId does not exists");
             }
 
-            if (news == null)
+            if (news.Equals(null))
             {
                 throw new Exception("NewsId does not exists");
             }
@@ -60,32 +66,32 @@ namespace NewsBook.Repository
 
             favouriteNews = new FavouriteNews()
             {
-                Id = Guid.NewGuid(),
                 UserId = userId,
                 NewsId = newsId,
                 IsFavorite = isFavourite,
-                CreatedAt = new DateTime(),
-                UpdatedAt = new DateTime()
             };
-            await dbContext.FavouriteNews.AddAsync(favouriteNews);
-            await dbContext.SaveChangesAsync();
+            await _dbContext.FavouriteNews.AddAsync(favouriteNews);
+            await _dbContext.SaveChangesAsync();
 
             return favouriteNews;
         }
 
         public async Task<FavouriteNews> Update(FavouriteNews favouriteNews)
         {
-            favouriteNews.UpdatedAt = DateTime.Now;
-            await dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
             return favouriteNews;
         }
-        public async Task<List<FavouriteNews>> GetAll()
+        public async Task<PagedList<FavouriteNews>> GetAll(PagingParameters pagingParameters)
         {
-            return await dbContext.FavouriteNews.ToListAsync();
+            return await PagedList<FavouriteNews>.ToPagedList(
+                FindAll(),
+                pagingParameters.PageNumber, 
+                pagingParameters.PageSize
+            );
         }
-        public async Task<FavouriteNews?> GetById(Guid Id)
+        public async Task<FavouriteNews?> GetById(Guid id)
         {
-            return await dbContext.FavouriteNews.FindAsync(Id);
+            return await _dbContext.FavouriteNews.FindAsync(id);
         }
     }
 }

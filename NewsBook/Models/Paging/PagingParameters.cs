@@ -1,8 +1,8 @@
 ﻿namespace NewsBook.Models.Paging
 {
-    public class NewsParameters
+    public class PagingParameters
     {
-        const int maxPageSize = 50;
+        const int MaxPageSize = 50;
         public int PageNumber { get; set; } = 1;
         private int _pageSize = 10;
         public int PageSize
@@ -13,8 +13,10 @@
             }
             set
             {
-                _pageSize = value > maxPageSize ? maxPageSize : value;
+                _pageSize = value > MaxPageSize ? MaxPageSize : value;
             }
         }
+
+        
     }
 }

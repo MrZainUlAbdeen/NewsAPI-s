@@ -1,6 +1,6 @@
 ﻿namespace NewsBook.Repository
 {
-    public interface INewsBase<T>
+    public interface IBaseRepository<T>
     {
         IQueryable<T> FindAll();
     }
