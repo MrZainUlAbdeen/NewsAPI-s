@@ -16,7 +16,12 @@ namespace NewsBook.Repository
             ) : base(dbContext)
         {
             //_identityServices= identityServices;
-            this.dbContext = dbContext;
+            this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        }
+
+        public async Task<User?> CheckEmail(string email)
+        {
+            return await _dbContext.Users.FirstOrDefaultAsync(value => value.Email.Equals(email));
         }
         public async Task<User> Insert(string name, string email, string password)
         {
@@ -29,7 +34,7 @@ namespace NewsBook.Repository
             await dbContext.Users.AddAsync(user);
             await dbContext.SaveChangesAsync();
             return user;
-            }
+        }
 
         public async Task<User> Update(User user)
         {
@@ -66,9 +71,11 @@ namespace NewsBook.Repository
             return user;
         }
 
-        public  Task<User> GetByFilters(string email, string password)
+        public async Task<User> GetByFilters(string email, string password)
         {
-           throw new NotImplementedException();
+            return await _dbContext.Users.SingleOrDefaultAsync(authenticate => 
+            authenticate.Email == email &&
+            authenticate.Password == password);
         }
     }
 }

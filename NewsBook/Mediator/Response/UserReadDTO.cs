@@ -1,6 +1,6 @@
 ﻿using NewsBook.Models;
 
-namespace NewsBook.ModelDTO.User
+namespace NewsBook.Mediator.Response
 {
     public class UserReadDTO
     {

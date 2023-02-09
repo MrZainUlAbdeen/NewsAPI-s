@@ -5,6 +5,7 @@ using NewsBook.Authorization;
 using System.Text.Json.Serialization;
 using NewsBook.Helpers;
 using NewsBook.IdentityServices;
+using MediatR;
 
 namespace NewsBook
 {
@@ -15,6 +16,7 @@ namespace NewsBook
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            
             builder.Services.AddCors();
             builder.Services.AddControllers().AddJsonOptions(x =>
             {
@@ -38,8 +40,7 @@ namespace NewsBook
             builder.Services.AddScoped<IJwtUtils, JWTService>();
             builder.Services.AddScoped<IIdentityServices, NewsBook.IdentityServices.IdentityServices>();
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-            //builder.Services.AddScoped<IJwtUtils, JWTAuthentiation>();
-
+            builder.Services.AddMediatR(typeof(Program).Assembly);
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

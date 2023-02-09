@@ -31,8 +31,16 @@ namespace NewsBook.Repository
             return news;
         }
 
-        public async Task<News> Update(News news)
+        public async Task<News> Update(Guid id, string title, string description)
         {
+            var news = await GetById(id);
+            if (news == null)
+            {
+                throw new NotImplementedException();
+            }
+
+            news.Title = title;
+            news.Description = description;
             await _dbContext.SaveChangesAsync();
             return news;
         }

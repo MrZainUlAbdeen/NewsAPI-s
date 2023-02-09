@@ -1,4 +1,5 @@
 ﻿using NewsBook.Models;
+
 namespace NewsBook.IdentityServices
 {
     public class IdentityServices : IIdentityServices

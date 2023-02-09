@@ -5,7 +5,7 @@ namespace NewsBook.Repository
 {
     public interface IFavouriteNewsRespository : IBaseRepository<FavouriteNews>
     {
-        Task<FavouriteNews> Insert(Guid newsId, bool isFavourite = true);
+        Task<FavouriteNews> Insert(Guid newsId);
         Task<FavouriteNews> Update(FavouriteNews favouriteNews);
         Task<FavouriteNews?> Delete(Guid Id);
         Task<PagedList<FavouriteNews>> GetAll(PagingParameters newsParameters);

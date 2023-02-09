@@ -1,4 +1,4 @@
-﻿namespace NewsBook.ModelDTO.News
+﻿namespace NewsBook.Mediator.Response
 {
     public class NewsReadDTO
     {

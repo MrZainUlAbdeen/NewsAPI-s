@@ -42,8 +42,9 @@ namespace NewsBook.Repository
             );
         }
 
-        public async Task<FavouriteNews> Insert(Guid newsId, bool isFavourite = true)
+        public async Task<FavouriteNews> Insert(Guid newsId)
         {
+            bool isFavourite = true;
             var news = await _newsRepository.GetById(newsId);
             var userId = _identityServices.GetUserId() ?? Guid.Empty;
             if (userId.Equals(null))

@@ -1,14 +1,13 @@
 ﻿using AutoMapper;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NewsBook.Authorization;
-using NewsBook.Data;
 using NewsBook.IdentityServices;
-using NewsBook.ModelDTO.News;
+using NewsBook.Mediator.Commands.Users;
+using NewsBook.Mediator.Queries.Users;
+using NewsBook.Mediator.Response;
 using NewsBook.ModelDTO.User;
 using NewsBook.Models;
 using NewsBook.Models.Paging;
-using NewsBook.Repository;
 using AllowAnonymousAttribute = NewsBook.Authorization.AllowAnonymousAttribute;
 using AuthorizeAttribute = NewsBook.Authorization.AuthorizeAttribute;
 
@@ -19,25 +18,20 @@ namespace NewsBook.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly DatabaseContext _dbContext;
-        private readonly IUsersRepository _usersRepository;
-        private readonly IJwtUtils _jwtUtils;
+  
         private readonly IIdentityServices _identityServices;
         private IMapper _mapper;
+        private readonly ISender _mediator;
 
-        public UsersController(
-            IUsersRepository usersRepository,
-            DatabaseContext dbContext, 
-            IJwtUtils jwtUtils, 
+        public UsersController( 
             IIdentityServices identityServices,
-            IMapper mapper
+            IMapper mapper,
+            ISender mediator
             )
         {
+            _mediator= mediator;
             _mapper = mapper;
             _identityServices= identityServices;
-            _jwtUtils= jwtUtils;
-            _dbContext = dbContext;
-            _usersRepository = usersRepository;
         }
 
         [AllowAnonymous]
@@ -45,22 +39,17 @@ namespace NewsBook.Controllers
         public async Task<IActionResult> Get(
             [FromQuery] bool usePaging, 
             [FromQuery] PagingParameters pagingParameters
-            )
+        )
         {
             if(usePaging == true)
             {
-                var pagedUser = await _usersRepository.GetAll(pagingParameters);
-                var pagedUsersDTO = new PagedList<UserReadDTO>
-                {
-                    Items = _mapper.Map<List<UserReadDTO>>(pagedUser.Items),
-                    TotalCount = pagedUser.TotalCount,
-                    TotalPages = pagedUser.TotalPages,
-                    CurrentPage = pagedUser.CurrentPage,
-                    PageSize = pagedUser.PageSize
-                };
-                return Ok(pagedUsersDTO);
+                var paginatedUsers = await _mediator.Send(new GetPaginatedUsersQuery { 
+                    Page = pagingParameters
+                });
+                return Ok(paginatedUsers);
             }
-            var user = await _usersRepository.GetAll();
+
+            var user = await _mediator.Send(new GetUsersQuery());
             return Ok(_mapper.Map<List<UserReadDTO>>(user));
         }
 
@@ -68,56 +57,52 @@ namespace NewsBook.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(Guid id)
         {
-            return Ok(await _usersRepository.GetById(id));
+            return Ok(await _mediator.Send(new GetUserByIdQuery { Id = id }));
         }
+
         [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] UserWriteDTO userDTO)
         {
-            var email = await _dbContext.Users.FirstOrDefaultAsync(value => value.Email.Equals(userDTO.Email));
-            if(email == null)
+            var user = await _mediator.Send(new PostUserQuery
             {
-                var user = await _usersRepository.Insert(userDTO.Name, userDTO.Email, userDTO.Password);
-                return Ok(_mapper.Map<UserReadDTO>(user));
-            }
-            return BadRequest("Email already Exist");
+                userDTO = userDTO
+            });
+            return Ok(user);
         }
+
         [AllowAnonymous]
         [HttpPut]
         public async Task<IActionResult> Put(
             [FromBody] UserWriteDTO userDTO
             )
         {
-            var userId = _identityServices.GetUserId() ?? Guid.Empty;
-            if (userId.Equals(_usersRepository.GetById(userId))) 
+            var user = await _mediator.Send(new PostUserQuery
             {
-                await _usersRepository.Insert(userDTO.Name, userDTO.Email, userDTO.Password);
-                return Ok(userId);
-            }
-            return BadRequest("User not found");
+                userDTO = userDTO
+            });
+            return Ok(user);    
         }
-        [Authorize(Role.admin)]
-        [HttpDelete]
-        [Route("delete")]
-        public async Task<IActionResult> Delete()
+        //[Authorize(Role.admin)]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
         {
-            var userId = _identityServices.GetUserId() ?? Guid.Empty;
-            return Ok(await _usersRepository.Delete(userId));
+            return Ok(await _mediator.Send(new DeleteUserQuery { Id = id }));
+            
         }
+
 
         [AllowAnonymous]
         [HttpPost("authenticate")]
         public async Task<IActionResult> Authenticate(UserAuthenticationDTO userAuthentication)
         {
-            var user = await _dbContext.Users.SingleOrDefaultAsync(
-                x => x.Email == userAuthentication.Email && x.Password == userAuthentication.Password
-                );
-            if (user == null)
+            var user = await _mediator.Send(new LoginQuery { UserAuthenticate = userAuthentication});
+            if(user == null)
             {
-                return BadRequest("Invalid Email/Password");
+                return BadRequest("Incorrect Email/Password");
             }
-            var jwtToken = _jwtUtils.GenerateToken(user);
-            return Ok(jwtToken);
+            return Ok(user);
+
         }
 
         [HttpGet("loginUserId")]
@@ -127,4 +112,3 @@ namespace NewsBook.Controllers
         }
     }
 }
-

@@ -7,7 +7,7 @@ namespace NewsBook.Repository
     public interface INewsRepository : IBaseRepository<News>
     {
         Task<News> Insert(string Tittle, string Description);
-        Task<News> Update(News news);
+        Task<News> Update(Guid id, string title, string description);
         Task<News> Delete(Guid Id);
         Task<List<News>> GetAll();
         Task<PagedList<News>> GetAll(PagingParameters pagingParameters);

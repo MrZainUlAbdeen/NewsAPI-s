@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using NewsBook.ModelDTO.User;
+using NewsBook.Mediator.Response;
 using NewsBook.Models;
 
 namespace NewsBook.MappingProfiles
