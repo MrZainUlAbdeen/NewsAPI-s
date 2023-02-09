@@ -4,16 +4,16 @@ using NewsBook.Models.Paging;
 
 namespace NewsBook.Mediator.Queries.FavouriteNews
 {
-    public class GetFavouriteNewsQuery : IRequest<List<NewsReadDTO>>
+    public class GetFavouriteNewsQuery : IRequest<List<NewsResponse>>
     {
 
     }
-    public class GetPaginatedFavouriteNewsQuery : IRequest<PagedList<NewsReadDTO>>
+    public class GetPaginatedFavouriteNewsQuery : IRequest<PagedList<NewsResponse>>
     {
         public PagingParameters Page;
     }
-    public class GetFavouriteNewsByIdQuery : IRequest<NewsReadDTO>
+    public class GetFavouriteNewsByIdQuery : IRequest<NewsResponse>
     {
-        public Guid id;
+        public Guid Id;
     }
 }

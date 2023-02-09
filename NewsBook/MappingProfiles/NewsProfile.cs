@@ -8,7 +8,7 @@ namespace NewsBook.MappingProfiles
     {
         public NewsProfile()
         {
-            CreateMap<News, NewsReadDTO>().ForMember(dest => dest.NewsId, opt => opt.MapFrom(src => src.Id));
+            CreateMap<News, NewsResponse>().ForMember(dest => dest.NewsId, opt => opt.MapFrom(src => src.Id));
         }
     }
 }

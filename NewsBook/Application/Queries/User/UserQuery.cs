@@ -9,12 +9,12 @@ namespace NewsBook.Mediator.Queries.Users
     {
     }
 
-    public class GetPaginatedUsersQuery : IRequest<PagedList<UserReadDTO>>
+    public class GetPaginatedUsersQuery : IRequest<PagedList<UserResponse>>
     {
         public PagingParameters Page;
     }
 
-    public class GetUserByIdQuery : IRequest<UserReadDTO>
+    public class GetUserByIdQuery : IRequest<UserResponse>
     {
         public Guid Id;
     }

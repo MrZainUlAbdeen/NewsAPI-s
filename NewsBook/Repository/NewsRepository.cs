@@ -36,15 +36,14 @@ namespace NewsBook.Repository
             var news = await GetById(id);
             if (news == null)
             {
-                throw new NotImplementedException();
+                return null;
             }
 
             news.Title = title;
             news.Description = description;
-            await _dbContext.SaveChangesAsync();
+            Update(news);
             return news;
         }
-
 
         public async Task<News> Delete(Guid id)
         {
@@ -108,6 +107,13 @@ namespace NewsBook.Repository
                     pagingParameters.PageNumber, 
                     pagingParameters.PageSize
             );
+        }
+
+        public async Task<News> Update(News news)
+        {
+            _dbContext.News.Update(news);
+            await _dbContext.SaveChangesAsync();
+            return news;
         }
     }
 }

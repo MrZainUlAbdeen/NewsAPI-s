@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using NewsBook.ModelDTO.FavouriteNews;
 using NewsBook.Models;
 
 namespace NewsBook.MappingProfiles

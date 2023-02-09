@@ -1,11 +1,9 @@
 ﻿using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using NewsBook.IdentityServices;
 using NewsBook.Mediator.Commands.Users;
 using NewsBook.Mediator.Queries.Users;
 using NewsBook.Mediator.Response;
-using NewsBook.ModelDTO.User;
 using NewsBook.Models;
 using NewsBook.Models.Paging;
 using AllowAnonymousAttribute = NewsBook.Authorization.AllowAnonymousAttribute;
@@ -19,19 +17,16 @@ namespace NewsBook.Controllers
     public class UsersController : ControllerBase
     {
   
-        private readonly IIdentityServices _identityServices;
-        private IMapper _mapper;
+        private readonly IMapper _mapper;
         private readonly ISender _mediator;
 
-        public UsersController( 
-            IIdentityServices identityServices,
+        public UsersController(
             IMapper mapper,
             ISender mediator
             )
         {
             _mediator= mediator;
             _mapper = mapper;
-            _identityServices= identityServices;
         }
 
         [AllowAnonymous]
@@ -43,14 +38,14 @@ namespace NewsBook.Controllers
         {
             if(usePaging == true)
             {
-                var paginatedUsers = await _mediator.Send(new GetPaginatedUsersQuery { 
+                var paginatedUsers = await _mediator.Send(new GetPaginatedUsersQuery {
                     Page = pagingParameters
                 });
                 return Ok(paginatedUsers);
             }
 
             var user = await _mediator.Send(new GetUsersQuery());
-            return Ok(_mapper.Map<List<UserReadDTO>>(user));
+            return Ok(_mapper.Map<List<UserResponse>>(user));
         }
 
         [Authorize(Role.admin)]
@@ -62,53 +57,37 @@ namespace NewsBook.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] UserWriteDTO userDTO)
-        {
-            var user = await _mediator.Send(new PostUserQuery
-            {
-                userDTO = userDTO
-            });
-            return Ok(user);
+        public async Task<IActionResult> Post([FromBody] InsertUserQuery insertUser)
+        {            
+            return Ok(await _mediator.Send(insertUser));
         }
 
         [AllowAnonymous]
         [HttpPut]
         public async Task<IActionResult> Put(
-            [FromBody] UserWriteDTO userDTO
+            [FromBody] UpdateUserQuery updateUser
             )
         {
-            var user = await _mediator.Send(new PostUserQuery
-            {
-                userDTO = userDTO
-            });
-            return Ok(user);    
+            return Ok(await _mediator.Send(updateUser));
         }
-        //[Authorize(Role.admin)]
+        [Authorize(Role.admin)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
             return Ok(await _mediator.Send(new DeleteUserQuery { Id = id }));
-            
         }
-
 
         [AllowAnonymous]
         [HttpPost("authenticate")]
-        public async Task<IActionResult> Authenticate(UserAuthenticationDTO userAuthentication)
+        public async Task<IActionResult> Authenticate(UserLoginQuery userLogin)
         {
-            var user = await _mediator.Send(new LoginQuery { UserAuthenticate = userAuthentication});
+            var user = await _mediator.Send(userLogin);
             if(user == null)
             {
                 return BadRequest("Incorrect Email/Password");
             }
             return Ok(user);
 
-        }
-
-        [HttpGet("loginUserId")]
-        public IActionResult UserId()
-        {
-            return Ok(_identityServices.GetUserId() ?? Guid.Empty);
         }
     }
 }

@@ -10,8 +10,8 @@ namespace NewsBook.Mediator.Queries.News
 {
     public class NewsQueryHandler : 
         IRequestHandler<GetNewsQuery, List<Models.News>>,
-        IRequestHandler<GetPaginatedNewsQuery, PagedList<NewsReadDTO>>,
-        IRequestHandler<GetNewsByIdQuery, NewsReadDTO>
+        IRequestHandler<GetPaginatedNewsQuery, PagedList<NewsResponse>>,
+        IRequestHandler<GetNewsByIdQuery, NewsResponse>
 
     {
         private readonly INewsRepository _newsRepository;
@@ -26,24 +26,24 @@ namespace NewsBook.Mediator.Queries.News
             return await _newsRepository.GetAll();
         }
 
-        public async Task<PagedList<NewsReadDTO>> Handle(GetPaginatedNewsQuery request, CancellationToken cancellationToken)
+        public async Task<PagedList<NewsResponse>> Handle(GetPaginatedNewsQuery request, CancellationToken cancellationToken)
         {
             var pagedNews = await _newsRepository.GetAll(request.Page);
-            var pagedNewsDTO = new PagedList<NewsReadDTO>
+            var pagedNewsDTO = new PagedList<NewsResponse>
             {
-                Items = _mapper.Map<List<NewsReadDTO>>(pagedNews.Items),
+                Items = _mapper.Map<List<NewsResponse>>(pagedNews.Items),
                 TotalCount = pagedNews.TotalCount,
                 TotalPages = pagedNews.TotalPages,
                 CurrentPage = pagedNews.CurrentPage,
                 PageSize = pagedNews.PageSize
             };
-            return _mapper.Map<PagedList<NewsReadDTO>>(pagedNewsDTO);
+            return _mapper.Map<PagedList<NewsResponse>>(pagedNewsDTO);
         }
 
-        public async Task<NewsReadDTO> Handle(GetNewsByIdQuery request, CancellationToken cancellationToken)
+        public async Task<NewsResponse> Handle(GetNewsByIdQuery request, CancellationToken cancellationToken)
         {
             var getById = await _newsRepository.GetById(request.Id);
-            return _mapper.Map<NewsReadDTO>(getById);
+            return _mapper.Map<NewsResponse>(getById);
         }
     }
 }

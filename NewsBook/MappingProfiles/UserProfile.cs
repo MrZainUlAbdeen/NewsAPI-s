@@ -8,7 +8,7 @@ namespace NewsBook.MappingProfiles
     {
         public UserProfile()
         {
-            CreateMap<User, UserReadDTO>();
+            CreateMap<User, UserResponse>();
         }
          
     }

@@ -11,21 +11,19 @@ namespace NewsBook.Mediator.Queries.Users
 {
     public class UserQueryHandler :
         IRequestHandler<GetUsersQuery, List<User>>,
-        IRequestHandler<GetPaginatedUsersQuery, PagedList<UserReadDTO>>,
-        IRequestHandler<GetUserByIdQuery, UserReadDTO>
+        IRequestHandler<GetPaginatedUsersQuery, PagedList<UserResponse>>,
+        IRequestHandler<GetUserByIdQuery, UserResponse>
 
     {
         private readonly IUsersRepository _usersRepository;
-        private IMapper _mapper;
-        private IIdentityServices _identityService;
-
+        private readonly IMapper _mapper;
+        
         public UserQueryHandler(
             IUsersRepository usersRepository,
-            IMapper mapper,
-            IIdentityServices identityService
+            IMapper mapper
+            
         )
         {
-            _identityService = identityService;
             _usersRepository = usersRepository ?? throw new ArgumentNullException(nameof(usersRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
@@ -35,12 +33,12 @@ namespace NewsBook.Mediator.Queries.Users
             return await _usersRepository.GetAll();
         }
 
-        public async Task<PagedList<UserReadDTO>> Handle(GetPaginatedUsersQuery request, CancellationToken cancellationToken)
+        public async Task<PagedList<UserResponse>> Handle(GetPaginatedUsersQuery request, CancellationToken cancellationToken)
         {
             var pagedUser = await _usersRepository.GetAll(request.Page);
-            PagedList<UserReadDTO> pagedUsersDTO = new PagedList<UserReadDTO>
+            PagedList<UserResponse> pagedUsersDTO = new PagedList<UserResponse>
             {
-                Items = _mapper.Map<List<UserReadDTO>>(pagedUser.Items),
+                Items = _mapper.Map<List<UserResponse>>(pagedUser.Items),
                 TotalCount = pagedUser.TotalCount,
                 TotalPages = pagedUser.TotalPages,
                 CurrentPage = pagedUser.CurrentPage,
@@ -50,10 +48,10 @@ namespace NewsBook.Mediator.Queries.Users
             return pagedUsersDTO;
         }
 
-        public async Task<UserReadDTO> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
+        public async Task<UserResponse> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
         {
             var user = await _usersRepository.GetById(request.Id);
-            return _mapper.Map<UserReadDTO>(user);
+            return _mapper.Map<UserResponse>(user);
         }
     }
 }

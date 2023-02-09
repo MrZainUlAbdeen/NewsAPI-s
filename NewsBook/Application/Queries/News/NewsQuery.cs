@@ -8,12 +8,12 @@ namespace NewsBook.Mediator.Queries.News
     {
 
     }
-    public class GetPaginatedNewsQuery : IRequest<PagedList<NewsReadDTO>>
+    public class GetPaginatedNewsQuery : IRequest<PagedList<NewsResponse>>
     {
         public PagingParameters Page;
     }
 
-    public class GetNewsByIdQuery : IRequest<NewsReadDTO>
+    public class GetNewsByIdQuery : IRequest<NewsResponse>
     {
         public Guid Id;
     } 

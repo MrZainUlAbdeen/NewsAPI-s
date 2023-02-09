@@ -9,14 +9,15 @@ namespace NewsBook.Repository
     public class UsersRepository : NewsBase<User>, IUsersRepository
     {
         private readonly DatabaseContext dbContext;
-        //private readonly IIdentityServices _identityServices;
+        private readonly IIdentityServices _identityServices;
         public UsersRepository(
-            DatabaseContext dbContext
-            //IIdentityServices identityServices
+            DatabaseContext dbContext,
+            IIdentityServices identityServices
             ) : base(dbContext)
         {
-            //_identityServices= identityServices;
+            _identityServices= identityServices;
             this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _identityServices = identityServices;
         }
 
         public async Task<User?> CheckEmail(string email)
@@ -38,6 +39,7 @@ namespace NewsBook.Repository
 
         public async Task<User> Update(User user)
         {
+            _dbContext.Users.Update(user);
             await dbContext.SaveChangesAsync();
             return user;
         }
@@ -47,7 +49,6 @@ namespace NewsBook.Repository
             if (user != null) {
                 dbContext.Users.Remove(user);
             }
-
             await dbContext.SaveChangesAsync();
             return user;
         }
@@ -76,6 +77,20 @@ namespace NewsBook.Repository
             return await _dbContext.Users.SingleOrDefaultAsync(authenticate => 
             authenticate.Email == email &&
             authenticate.Password == password);
+        }
+
+        public async Task<User> Update(string name, string password)
+        {
+            var userId = _identityServices.GetUserId() ?? Guid.Empty;
+            var user = await GetById(userId);
+            if (user != null)
+            {
+                user.Name = name;
+                user.Password = password;
+                await Update(user);
+                return user;
+            }
+            return null;
         }
     }
 }

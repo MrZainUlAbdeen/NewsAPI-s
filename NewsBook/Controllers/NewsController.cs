@@ -7,7 +7,6 @@ using NewsBook.Mediator.Commands.News;
 using NewsBook.Mediator.Queries.FavouriteNews;
 using NewsBook.Mediator.Queries.News;
 using NewsBook.Mediator.Response;
-using NewsBook.ModelDTO.News;
 using NewsBook.Models.Paging;
 
 namespace NewsBook.Controllers
@@ -41,7 +40,7 @@ namespace NewsBook.Controllers
                 ));
             }
             var news = await _mediator.Send(new GetNewsQuery() );
-            return Ok(_mapper.Map<List<NewsReadDTO>>(news));
+            return Ok(_mapper.Map<List<NewsResponse>>(news));
         }
 
         [HttpGet]
@@ -53,22 +52,16 @@ namespace NewsBook.Controllers
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> Post(NewsWriteDTO newsDTO)
+        public async Task<IActionResult> Post(InsertNewsQuery insertNews)
         {
-            var news = await _mediator.Send(new PostNewsQuery
-            {
-                newsDTO = newsDTO
-            });
+            var news = await _mediator.Send(insertNews);
             return Ok(news);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Put(NewsUpdateRequest newsUpdateRequest)
+        public async Task<IActionResult> Put(UpdateNewsQuery updateNews)
         {
-            return Ok(await _mediator.Send(new PutNewsQuery
-            {
-                newsUpdate = newsUpdateRequest
-            })) ;
+            return Ok(await _mediator.Send(updateNews)) ;
         }
 
         [HttpDelete]
@@ -83,11 +76,7 @@ namespace NewsBook.Controllers
         [Route("markfavourite{id}")]
         public async Task<IActionResult> MarkFavourite(Guid id)
         {
-            return Ok(await _mediator.Send(new MarkFavouriteNews
-            {
-                id = id
-            }
-            ) );
+            return Ok(await _mediator.Send(new MarkFavouriteNews{ Id = id }));
         }
 
         [AllowAnonymous]
@@ -113,7 +102,7 @@ namespace NewsBook.Controllers
         [Route("favouritedelete{id}")]
         public async Task<IActionResult> DeleteFavouriteNews(Guid id)
         {
-            return Ok(await _mediator.Send(new DeleteFavouriteNews { id = id }));
+            return Ok(await _mediator.Send(new DeleteFavouriteNews { Id = id }));
         }
 
     }

@@ -7,25 +7,27 @@ using NewsBook.Repository;
 namespace NewsBook.Mediator.Queries.FavouriteNews
 {
     public class FavouriteNewsQueryHandler : 
-        IRequestHandler<GetFavouriteNewsQuery, List<NewsReadDTO>>,
-        IRequestHandler<GetPaginatedFavouriteNewsQuery, PagedList<NewsReadDTO>>,
-        IRequestHandler<GetFavouriteNewsByIdQuery, NewsReadDTO>
+        IRequestHandler<GetFavouriteNewsQuery, List<NewsResponse>>,
+        IRequestHandler<GetPaginatedFavouriteNewsQuery, PagedList<NewsResponse>>,
+        IRequestHandler<GetFavouriteNewsByIdQuery, NewsResponse>
     {
         private readonly INewsRepository _newsRepository;
         private IMapper _mapper;
-        public FavouriteNewsQueryHandler(IMapper mapper, INewsRepository newsRepository)
+        private readonly IFavouriteNewsRespository _favouriteNewsRespository;
+        public FavouriteNewsQueryHandler(IMapper mapper, INewsRepository newsRepository, IFavouriteNewsRespository favouriteNewsRespository)
         {
+            _favouriteNewsRespository = favouriteNewsRespository;
             _mapper = mapper;
             _newsRepository = newsRepository;
         }
 
-        public async Task<List<NewsReadDTO>> Handle(GetFavouriteNewsQuery request, CancellationToken cancellationToken)
+        public async Task<List<NewsResponse>> Handle(GetFavouriteNewsQuery request, CancellationToken cancellationToken)
         {
             var favouriteNews = await _newsRepository.GetFavouriteNews();
-            return _mapper.Map<List<NewsReadDTO>>(favouriteNews);
+            return _mapper.Map<List<NewsResponse>>(favouriteNews);
         }
 
-        public async Task<PagedList<NewsReadDTO>> Handle(GetPaginatedFavouriteNewsQuery request, CancellationToken cancellationToken)
+        public async Task<PagedList<NewsResponse>> Handle(GetPaginatedFavouriteNewsQuery request, CancellationToken cancellationToken)
         {
             //NOTE: Solution to map object to another object
             //var news = (await _newsRepository.GetFavouriteNews())
@@ -43,9 +45,9 @@ namespace NewsBook.Mediator.Queries.FavouriteNews
             //return Ok(news);
 
             var pagedFavouriteNews = await _newsRepository.GetFavouriteNews(request.Page);
-            var pagedNewsDTO = new PagedList<NewsReadDTO>
+            var pagedNewsDTO = new PagedList<NewsResponse>
             {
-                Items = _mapper.Map<List<NewsReadDTO>>(pagedFavouriteNews.Items),
+                Items = _mapper.Map<List<NewsResponse>>(pagedFavouriteNews.Items),
                 TotalCount = pagedFavouriteNews.TotalCount,
                 TotalPages = pagedFavouriteNews.TotalPages,
                 CurrentPage = pagedFavouriteNews.CurrentPage,
@@ -54,9 +56,10 @@ namespace NewsBook.Mediator.Queries.FavouriteNews
             return pagedNewsDTO;
         }
 
-        public Task<NewsReadDTO> Handle(GetFavouriteNewsByIdQuery request, CancellationToken cancellationToken)
+        public async Task<NewsResponse> Handle(GetFavouriteNewsByIdQuery request, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            var favouritenews =  await _favouriteNewsRespository.GetById(request.Id);
+            return _mapper.Map<NewsResponse>(favouritenews);
         }
     }
 }
