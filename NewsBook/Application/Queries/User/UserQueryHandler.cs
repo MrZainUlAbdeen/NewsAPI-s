@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using MediatR;
 using NewsBook.IdentityServices;
-using NewsBook.Mediator.Response;
 using NewsBook.Models;
 using NewsBook.Models.Paging;
 using NewsBook.Repository;
+using NewsBook.Response;
 using NuGet.Protocol.Plugins;
 
 namespace NewsBook.Mediator.Queries.Users
@@ -30,12 +30,12 @@ namespace NewsBook.Mediator.Queries.Users
 
         public async Task<List<User>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
         {
-            return await _usersRepository.GetAll();
+            return await _usersRepository.GetAll(request.OrderBy, request.IsAscending);
         }
 
         public async Task<PagedList<UserResponse>> Handle(GetPaginatedUsersQuery request, CancellationToken cancellationToken)
         {
-            var pagedUser = await _usersRepository.GetAll(request.Page);
+            var pagedUser = await _usersRepository.GetAll(request.Page, request.OrderBy, request.IsAscending);
             PagedList<UserResponse> pagedUsersDTO = new PagedList<UserResponse>
             {
                 Items = _mapper.Map<List<UserResponse>>(pagedUser.Items),

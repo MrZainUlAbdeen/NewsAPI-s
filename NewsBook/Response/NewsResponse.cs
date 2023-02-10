@@ -1,4 +1,4 @@
-﻿namespace NewsBook.Mediator.Response
+﻿namespace NewsBook.Response
 {
     public class NewsResponse
     {

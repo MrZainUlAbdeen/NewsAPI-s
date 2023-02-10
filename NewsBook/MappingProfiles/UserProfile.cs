@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using NewsBook.Mediator.Response;
 using NewsBook.Models;
+using NewsBook.Response;
 
 namespace NewsBook.MappingProfiles
 {

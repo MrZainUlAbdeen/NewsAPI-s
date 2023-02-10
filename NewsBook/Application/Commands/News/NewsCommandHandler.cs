@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using MediatR;
-using NewsBook.Mediator.Response;
 using NewsBook.Repository;
+using NewsBook.Response;
 
 namespace NewsBook.Mediator.Commands.News
 {

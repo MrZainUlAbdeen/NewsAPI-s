@@ -1,20 +1,26 @@
 ﻿using MediatR;
-using NewsBook.Mediator.Response;
 using NewsBook.Models;
 using NewsBook.Models.Paging;
+using NewsBook.Response;
 
 namespace NewsBook.Mediator.Queries.Users
 {
-    public class GetUsersQuery : IRequest<List<User>>
+    public class BaseRequest<T> : IRequest<T>
+    {
+        public string OrderBy { get; set; } = string.Empty;
+        public bool IsAscending { get; set; } = true;
+    }
+
+    public class GetUsersQuery : BaseRequest<List<User>>
     {
     }
 
-    public class GetPaginatedUsersQuery : IRequest<PagedList<UserResponse>>
+    public class GetPaginatedUsersQuery : BaseRequest<PagedList<UserResponse>>
     {
         public PagingParameters Page;
     }
 
-    public class GetUserByIdQuery : IRequest<UserResponse>
+    public class GetUserByIdQuery : BaseRequest<UserResponse>
     {
         public Guid Id;
     }

@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NewsBook.Application.Extensions;
+using NewsBook.Core;
 using NewsBook.Data;
 using NewsBook.IdentityServices;
 using NewsBook.Models;
@@ -6,7 +8,7 @@ using NewsBook.Models.Paging;
 
 namespace NewsBook.Repository
 {
-    public class UsersRepository : NewsBase<User>, IUsersRepository
+    public class UsersRepository : BaseResponse<User>, IUsersRepository
     {
         private readonly DatabaseContext dbContext;
         private readonly IIdentityServices _identityServices;
@@ -53,14 +55,25 @@ namespace NewsBook.Repository
             return user;
         }
 
-        public async Task<List<User>> GetAll()
+        public async Task<List<User>> GetAll(string orderBy, bool isAscending = true)
         {
-            return await FindAll().ToListAsync();
+            var queryable = FindAll();
+            if (!string.IsNullOrEmpty(orderBy))
+            {
+                queryable.OrderByPropertyOrField(orderBy, isAscending);
+            }
+            return await queryable.ToListAsync();
         }
-        public async Task<PagedList<User>> GetAll(PagingParameters pagingParameters)
+
+        public async Task<PagedList<User>> GetAll(PagingParameters pagingParameters, string orderBy, bool isAscending = true)
         {
+            var queryable = FindAll();
+            if (!string.IsNullOrEmpty(orderBy))
+            {
+                queryable.OrderByPropertyOrField(orderBy, isAscending);
+            }
             return await PagedList<User>.ToPagedList(
-                FindAll(),
+                queryable,
                 pagingParameters.PageNumber,
                 pagingParameters.PageSize
             );

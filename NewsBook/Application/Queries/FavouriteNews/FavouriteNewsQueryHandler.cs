@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using MediatR;
-using NewsBook.Mediator.Response;
 using NewsBook.Models.Paging;
 using NewsBook.Repository;
+using NewsBook.Response;
 
 namespace NewsBook.Mediator.Queries.FavouriteNews
 {
@@ -23,7 +23,7 @@ namespace NewsBook.Mediator.Queries.FavouriteNews
 
         public async Task<List<NewsResponse>> Handle(GetFavouriteNewsQuery request, CancellationToken cancellationToken)
         {
-            var favouriteNews = await _newsRepository.GetFavouriteNews();
+            var favouriteNews = await _newsRepository.GetFavouriteNews(request.OrderBy, request.IsAscending);
             return _mapper.Map<List<NewsResponse>>(favouriteNews);
         }
 
@@ -44,7 +44,7 @@ namespace NewsBook.Mediator.Queries.FavouriteNews
             //    );
             //return Ok(news);
 
-            var pagedFavouriteNews = await _newsRepository.GetFavouriteNews(request.Page);
+            var pagedFavouriteNews = await _newsRepository.GetFavouriteNews(request.Page, request.OrderBy, request.IsAscending);
             var pagedNewsDTO = new PagedList<NewsResponse>
             {
                 Items = _mapper.Map<List<NewsResponse>>(pagedFavouriteNews.Items),

@@ -3,9 +3,9 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using NewsBook.Mediator.Commands.Users;
 using NewsBook.Mediator.Queries.Users;
-using NewsBook.Mediator.Response;
 using NewsBook.Models;
 using NewsBook.Models.Paging;
+using NewsBook.Response;
 using AllowAnonymousAttribute = NewsBook.Authorization.AllowAnonymousAttribute;
 using AuthorizeAttribute = NewsBook.Authorization.AuthorizeAttribute;
 
@@ -32,19 +32,26 @@ namespace NewsBook.Controllers
         [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> Get(
-            [FromQuery] bool usePaging, 
+            [FromQuery] bool usePaging,
+            [FromQuery] bool isAscending,
+            [FromQuery] string orderBy,
             [FromQuery] PagingParameters pagingParameters
         )
         {
             if(usePaging == true)
             {
                 var paginatedUsers = await _mediator.Send(new GetPaginatedUsersQuery {
-                    Page = pagingParameters
+                    Page = pagingParameters,
+                    OrderBy = orderBy,
+                    IsAscending = isAscending
                 });
                 return Ok(paginatedUsers);
             }
 
-            var user = await _mediator.Send(new GetUsersQuery());
+            var user = await _mediator.Send(new GetUsersQuery {
+                OrderBy = orderBy,
+                IsAscending = isAscending
+            });
             return Ok(_mapper.Map<List<UserResponse>>(user));
         }
 

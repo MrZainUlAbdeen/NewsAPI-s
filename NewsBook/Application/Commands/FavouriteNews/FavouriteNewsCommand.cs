@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using NewsBook.Mediator.Response;
+using NewsBook.Response;
 
 namespace NewsBook.Mediator.Commands.FavouriteNewsCommands
 {

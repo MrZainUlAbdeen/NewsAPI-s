@@ -6,8 +6,8 @@ using NewsBook.Mediator.Commands.FavouriteNewsCommands;
 using NewsBook.Mediator.Commands.News;
 using NewsBook.Mediator.Queries.FavouriteNews;
 using NewsBook.Mediator.Queries.News;
-using NewsBook.Mediator.Response;
 using NewsBook.Models.Paging;
+using NewsBook.Response;
 
 namespace NewsBook.Controllers
 {
@@ -29,17 +29,27 @@ namespace NewsBook.Controllers
 
         [HttpGet]
         public async Task<IActionResult> Get(
-            [FromQuery] bool usePaging, 
+            [FromQuery] bool usePaging,
+            [FromQuery] bool isAscending,
+            [FromQuery] string orderBy,
             [FromQuery] PagingParameters pagingParameters
             )
         {
             if (usePaging == true)
             {
                 return Ok(await _mediator.Send(new GetPaginatedNewsQuery
-                    { Page = pagingParameters }
+                    { 
+                        Page = pagingParameters,
+                        OrderBy = orderBy,
+                        IsAscending = isAscending
+                    }
                 ));
             }
-            var news = await _mediator.Send(new GetNewsQuery() );
+            var news = await _mediator.Send(new GetNewsQuery {
+                    OrderBy = orderBy,
+                    IsAscending = isAscending
+                } 
+            );
             return Ok(_mapper.Map<List<NewsResponse>>(news));
         }
 
@@ -83,7 +93,9 @@ namespace NewsBook.Controllers
         [HttpGet]
         [Route("favourite")]
         public async Task<IActionResult> GetFavouriteNews(
-            [FromQuery] bool usePaging, 
+            [FromQuery] bool isAscending,
+            [FromQuery] string orderBy,
+            [FromQuery] bool usePaging,
             [FromQuery] PagingParameters pagingParameters
             )
         {
@@ -91,11 +103,16 @@ namespace NewsBook.Controllers
             {
                 return Ok(await _mediator.Send(new GetPaginatedFavouriteNewsQuery
                 {
-                    Page = pagingParameters
+                    Page = pagingParameters,
+                    OrderBy = orderBy,
+                    IsAscending = isAscending
                 }
                 ) );
             }
-            return Ok(await _mediator.Send(new GetFavouriteNewsQuery()) );
+            return Ok(await _mediator.Send(new GetFavouriteNewsQuery {
+                OrderBy = orderBy,
+                IsAscending = isAscending
+            }) );
         }
 
         [HttpDelete]

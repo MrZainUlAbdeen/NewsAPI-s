@@ -1,6 +1,6 @@
 ﻿using NewsBook.Models;
 
-namespace NewsBook.Mediator.Response
+namespace NewsBook.Response
 {
     public class UserResponse
     {

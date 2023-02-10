@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using NewsBook.Models;
+using NewsBook.Response;
 
 namespace NewsBook.MappingProfiles
 {
@@ -7,7 +8,7 @@ namespace NewsBook.MappingProfiles
     {
         public FavouriteNewsProfile()
         {
-            CreateMap<FavouriteNews, FavouriteNewsReadDTO>();
+            CreateMap<FavouriteNews, FavouriteNewsResponse>();
         }
     }
 }

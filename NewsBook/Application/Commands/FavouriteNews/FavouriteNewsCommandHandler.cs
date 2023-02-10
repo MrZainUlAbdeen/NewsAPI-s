@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using MediatR;
 using NewsBook.Mediator.Commands.FavouriteNewsCommands;
-using NewsBook.Mediator.Response;
 using NewsBook.Repository;
+using NewsBook.Response;
 
 namespace NewsBook.Mediator.Commands.FavouriteNewsCommand
 {

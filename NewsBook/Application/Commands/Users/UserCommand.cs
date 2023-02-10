@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using NewsBook.Mediator.Response;
+using NewsBook.Response;
 using System.ComponentModel.DataAnnotations;
 
 namespace NewsBook.Mediator.Commands.Users
