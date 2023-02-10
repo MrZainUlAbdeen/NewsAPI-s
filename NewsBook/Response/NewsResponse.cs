@@ -1,6 +1,6 @@
-﻿namespace NewsBook.ModelDTO.News
+﻿namespace NewsBook.Response
 {
-    public class NewsReadDTO
+    public class NewsResponse
     {
         public Guid UserId { get; set; }
         public Guid NewsId { get; set; }

@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NewsBook.Application.Extensions;
+using NewsBook.Core;
 using NewsBook.Data;
 using NewsBook.IdentityServices;
 using NewsBook.Models;
@@ -6,17 +8,23 @@ using NewsBook.Models.Paging;
 
 namespace NewsBook.Repository
 {
-    public class UsersRepository : NewsBase<User>, IUsersRepository
+    public class UsersRepository : BaseResponse<User>, IUsersRepository
     {
         private readonly DatabaseContext dbContext;
-        //private readonly IIdentityServices _identityServices;
+        private readonly IIdentityServices _identityServices;
         public UsersRepository(
-            DatabaseContext dbContext
-            //IIdentityServices identityServices
+            DatabaseContext dbContext,
+            IIdentityServices identityServices
             ) : base(dbContext)
         {
-            //_identityServices= identityServices;
-            this.dbContext = dbContext;
+            _identityServices= identityServices;
+            this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _identityServices = identityServices;
+        }
+
+        public async Task<User?> CheckEmail(string email)
+        {
+            return await _dbContext.Users.FirstOrDefaultAsync(value => value.Email.Equals(email));
         }
         public async Task<User> Insert(string name, string email, string password)
         {
@@ -29,10 +37,11 @@ namespace NewsBook.Repository
             await dbContext.Users.AddAsync(user);
             await dbContext.SaveChangesAsync();
             return user;
-            }
+        }
 
         public async Task<User> Update(User user)
         {
+            _dbContext.Users.Update(user);
             await dbContext.SaveChangesAsync();
             return user;
         }
@@ -42,19 +51,29 @@ namespace NewsBook.Repository
             if (user != null) {
                 dbContext.Users.Remove(user);
             }
-
             await dbContext.SaveChangesAsync();
             return user;
         }
 
-        public async Task<List<User>> GetAll()
+        public async Task<List<User>> GetAll(string orderBy, bool isAscending = true)
         {
-            return await FindAll().ToListAsync();
+            var queryable = FindAll();
+            if (!string.IsNullOrEmpty(orderBy))
+            {
+                queryable.OrderByPropertyOrField(orderBy, isAscending);
+            }
+            return await queryable.ToListAsync();
         }
-        public async Task<PagedList<User>> GetAll(PagingParameters pagingParameters)
+
+        public async Task<PagedList<User>> GetAll(PagingParameters pagingParameters, string orderBy, bool isAscending = true)
         {
+            var queryable = FindAll();
+            if (!string.IsNullOrEmpty(orderBy))
+            {
+                queryable.OrderByPropertyOrField(orderBy, isAscending);
+            }
             return await PagedList<User>.ToPagedList(
-                FindAll(),
+                queryable,
                 pagingParameters.PageNumber,
                 pagingParameters.PageSize
             );
@@ -66,9 +85,25 @@ namespace NewsBook.Repository
             return user;
         }
 
-        public  Task<User> GetByFilters(string email, string password)
+        public async Task<User> GetByFilters(string email, string password)
         {
-           throw new NotImplementedException();
+            return await _dbContext.Users.SingleOrDefaultAsync(authenticate => 
+            authenticate.Email == email &&
+            authenticate.Password == password);
+        }
+
+        public async Task<User> Update(string name, string password)
+        {
+            var userId = _identityServices.GetUserId() ?? Guid.Empty;
+            var user = await GetById(userId);
+            if (user != null)
+            {
+                user.Name = name;
+                user.Password = password;
+                await Update(user);
+                return user;
+            }
+            return null;
         }
     }
 }

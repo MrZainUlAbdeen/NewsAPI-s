@@ -3,10 +3,12 @@ using NewsBook.Data;
 using NewsBook.IdentityServices;
 using NewsBook.Models;
 using NewsBook.Models.Paging;
+using NewsBook.Application.Extensions;
+using NewsBook.Core;
 
 namespace NewsBook.Repository
 {
-    public class NewsRepository : NewsBase<News>, INewsRepository
+    public class NewsRepository : BaseResponse<News>, INewsRepository
     {
         private readonly DatabaseContext _dbContext;
         private readonly IIdentityServices _identityServices;
@@ -31,12 +33,19 @@ namespace NewsBook.Repository
             return news;
         }
 
-        public async Task<News> Update(News news)
+        public async Task<News> Update(Guid id, string title, string description)
         {
-            await _dbContext.SaveChangesAsync();
+            var news = await GetById(id);
+            if (news == null)
+            {
+                return null;
+            }
+
+            news.Title = title;
+            news.Description = description;
+            Update(news);
             return news;
         }
-
 
         public async Task<News> Delete(Guid id)
         {
@@ -54,15 +63,26 @@ namespace NewsBook.Repository
             return await _dbContext.News.FindAsync(id);
         }
 
-        public async Task<List<News>> GetAll()
+        public async Task<List<News>> GetAll(string orderBy, bool isAscending = true)
         {
-            return await FindAll().ToListAsync();
+            var queryable = FindAll();
+            if (!string.IsNullOrEmpty(orderBy))
+            {
+                queryable.OrderByPropertyOrField(orderBy, isAscending);
+            }
+            return await queryable.ToListAsync();
         }
 
-        public async Task<PagedList<News>> GetAll(PagingParameters pagingParameters)
+        public async Task<PagedList<News>> GetAll(PagingParameters pagingParameters, string orderBy, bool isAscending=true)
         {
+            var queryable = FindAll();
+            if (!string.IsNullOrEmpty(orderBy))
+            {
+                queryable.OrderByPropertyOrField(orderBy, isAscending);
+            }
+
             return await PagedList<News>.ToPagedList(
-                FindAll(), 
+                queryable,
                 pagingParameters.PageNumber, 
                 pagingParameters.PageSize
             );
@@ -86,20 +106,36 @@ namespace NewsBook.Repository
                }
             );
         }
-        public async Task<List<News>> GetFavouriteNews()
+        public async Task<List<News>> GetFavouriteNews(string orderBy, bool isAscending = true)
         {
             var userId = _identityServices.GetUserId() ?? Guid.Empty;
             var favouriteNews = GetFavouriteNewsQueryable(userId);
+            if (!string.IsNullOrEmpty(orderBy))
+            {
+                favouriteNews.OrderByPropertyOrField(orderBy, isAscending);
+            }
             return await favouriteNews.ToListAsync();
         }
-        public async Task<PagedList<News>> GetFavouriteNews(PagingParameters pagingParameters)
+        public async Task<PagedList<News>> GetFavouriteNews(PagingParameters pagingParameters, string orderBy, bool isAscending)
         {
             var userId = _identityServices.GetUserId() ?? Guid.Empty;
+            var favouriteNews = GetFavouriteNewsQueryable(userId);
+            if (!string.IsNullOrEmpty(orderBy))
+            {
+                favouriteNews.OrderByPropertyOrField(orderBy, isAscending);
+            }
             return await PagedList<News>.ToPagedList(
-                    GetFavouriteNewsQueryable(userId),
+                    favouriteNews,
                     pagingParameters.PageNumber, 
                     pagingParameters.PageSize
             );
+        }
+
+        public async Task<News> Update(News news)
+        {
+            _dbContext.News.Update(news);
+            await _dbContext.SaveChangesAsync();
+            return news;
         }
     }
 }

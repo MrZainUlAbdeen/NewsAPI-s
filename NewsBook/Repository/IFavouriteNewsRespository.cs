@@ -1,9 +1,10 @@
 ﻿using NewsBook.Models.Paging;
 using NewsBook.Models;
+using NewsBook.Core;
 
 namespace NewsBook.Repository
 {
-    public interface IFavouriteNewsRespository : IBaseRepository<FavouriteNews>
+    public interface IFavouriteNewsRespository : IBaseResponse<FavouriteNews>
     {
         Task<FavouriteNews> Insert(Guid newsId, bool isFavourite = true);
         Task<FavouriteNews> Update(FavouriteNews favouriteNews);

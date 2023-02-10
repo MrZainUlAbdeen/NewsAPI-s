@@ -1,8 +1,8 @@
 ﻿using NewsBook.Models;
 
-namespace NewsBook.ModelDTO.User
+namespace NewsBook.Response
 {
-    public class UserReadDTO
+    public class UserResponse
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
