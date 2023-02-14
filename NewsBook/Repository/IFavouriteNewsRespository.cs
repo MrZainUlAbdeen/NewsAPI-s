@@ -4,7 +4,7 @@ using NewsBook.Core;
 
 namespace NewsBook.Repository
 {
-    public interface IFavouriteNewsRespository : IBaseResponse<FavouriteNews>
+    public interface IFavouriteNewsRespository : IBaseRepository<FavouriteNews>
     {
         Task<FavouriteNews> Insert(Guid newsId, bool isFavourite = true);
         Task<FavouriteNews> Update(FavouriteNews favouriteNews);

@@ -14,11 +14,13 @@ namespace NewsBook.Mediator.Queries.News
 
     public class GetNewsQuery : BaseRequest<List<NewsBook.Models.News>>
     {
-
+        public Guid UserId;
+        public string filterName;
     }
     public class GetPaginatedNewsQuery : BaseRequest<PagedList<NewsResponse>>
     {
         public PagingParameters Page;
+        public Guid UserId;
     }
 
     public class GetNewsByIdQuery : IRequest<NewsResponse>

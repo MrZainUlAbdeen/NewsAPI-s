@@ -34,7 +34,12 @@ namespace NewsBook.Controllers
         public async Task<IActionResult> Get(
             [FromQuery] bool usePaging,
             [FromQuery] bool isAscending,
-            [FromQuery] string orderBy,
+            [FromQuery] string? orderBy,
+            [FromQuery] Guid newsID,
+            [FromQuery] string tableName,
+            [FromQuery] string filterList,
+            [FromQuery] string? startDate,
+            [FromQuery] string? endDate,
             [FromQuery] PagingParameters pagingParameters
         )
         {
@@ -42,6 +47,10 @@ namespace NewsBook.Controllers
             {
                 var paginatedUsers = await _mediator.Send(new GetPaginatedUsersQuery {
                     Page = pagingParameters,
+                    StartTime = startDate,
+                    tableName=tableName,
+                    filterName = filterList,
+                    EndDate = endDate,
                     OrderBy = orderBy,
                     IsAscending = isAscending
                 });
@@ -53,6 +62,28 @@ namespace NewsBook.Controllers
                 IsAscending = isAscending
             });
             return Ok(_mapper.Map<List<UserResponse>>(user));
+        }
+
+        [HttpGet("(favouritenews/id)")]
+        public async Task<IActionResult> GetFavourite(
+            [FromQuery] bool usePaging,
+            [FromQuery] PagingParameters pagingParameters,
+            Guid newsId, 
+            string? startDate, 
+            string? endDate)
+        {
+            if (usePaging == true)
+            {
+                var user = await _mediator.Send(new GetPaginatedUsersFavouriteNewsQuery
+                {
+                    Page = pagingParameters,
+                    NewsId = newsId,
+                    StartDate = startDate,
+                    EndDate = endDate
+                });
+                return Ok(user);
+            }
+            return Ok("Please Select Usepagination");
         }
 
         [Authorize(Role.admin)]

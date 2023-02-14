@@ -5,10 +5,11 @@ using NewsBook.Models;
 using NewsBook.Models.Paging;
 using NewsBook.Application.Extensions;
 using NewsBook.Core;
+using System.Linq.Expressions;
 
 namespace NewsBook.Repository
 {
-    public class NewsRepository : BaseResponse<News>, INewsRepository
+    public class NewsRepository : BaseRepository<News>, INewsRepository
     {
         private readonly DatabaseContext _dbContext;
         private readonly IIdentityServices _identityServices;
@@ -63,19 +64,34 @@ namespace NewsBook.Repository
             return await _dbContext.News.FindAsync(id);
         }
 
-        public async Task<List<News>> GetAll(string orderBy, bool isAscending = true)
+        public async Task<List<News>> GetAll(string orderBy, bool isAscending, Expression<Func<News, bool>>? filterBy
+            )
         {
             var queryable = FindAll();
+
+            //if (filterBy != null)
+            //{
+                //OrderByPropertyOrField(queryable, orderBy, isAscending);
+            //}
+
             if (!string.IsNullOrEmpty(orderBy))
             {
-                queryable.OrderByPropertyOrField(orderBy, isAscending);
+                queryable = OrderByPropertyOrField(queryable, orderBy, isAscending);
+                //queryable.OrderByPropertyOrField(orderBy, isAscending);
             }
+            //queryable = GetWithFilter(queryable,filterBy);
             return await queryable.ToListAsync();
         }
 
-        public async Task<PagedList<News>> GetAll(PagingParameters pagingParameters, string orderBy, bool isAscending=true)
+        public async Task<PagedList<News>> GetAll(PagingParameters pagingParameters, string orderBy, bool isAscending, Expression<Func<News, bool>>? filterBy)
         {
             var queryable = FindAll();
+
+            if (filterBy != null)
+            {
+                queryable = queryable.Where(filterBy);
+            }
+            
             if (!string.IsNullOrEmpty(orderBy))
             {
                 queryable.OrderByPropertyOrField(orderBy, isAscending);

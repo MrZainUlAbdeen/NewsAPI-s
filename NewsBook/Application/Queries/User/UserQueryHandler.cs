@@ -6,13 +6,16 @@ using NewsBook.Models.Paging;
 using NewsBook.Repository;
 using NewsBook.Response;
 using NuGet.Protocol.Plugins;
+using System.Linq.Expressions;
 
 namespace NewsBook.Mediator.Queries.Users
 {
     public class UserQueryHandler :
         IRequestHandler<GetUsersQuery, List<User>>,
         IRequestHandler<GetPaginatedUsersQuery, PagedList<UserResponse>>,
-        IRequestHandler<GetUserByIdQuery, UserResponse>
+        IRequestHandler<GetUserByIdQuery, UserResponse>,
+        IRequestHandler<GetPaginatedUsersFavouriteNewsQuery, PagedList<UserResponse>>
+        //IRequestHandler<GetUsersFavouriteNewsQuery , List<UserResponse>>
 
     {
         private readonly IUsersRepository _usersRepository;
@@ -35,7 +38,8 @@ namespace NewsBook.Mediator.Queries.Users
 
         public async Task<PagedList<UserResponse>> Handle(GetPaginatedUsersQuery request, CancellationToken cancellationToken)
         {
-            var pagedUser = await _usersRepository.GetAll(request.Page, request.OrderBy, request.IsAscending);
+            //Expression<Func<User, bool>> filterBy = news => news.Email == request.filterName;
+            var pagedUser = await _usersRepository.GetAll(request.tableName, request.filterName , request.StartTime,request.EndDate, request.Page,request.OrderBy ,request.IsAscending);
             PagedList<UserResponse> pagedUsersDTO = new PagedList<UserResponse>
             {
                 Items = _mapper.Map<List<UserResponse>>(pagedUser.Items),
@@ -53,5 +57,34 @@ namespace NewsBook.Mediator.Queries.Users
             var user = await _usersRepository.GetById(request.Id);
             return _mapper.Map<UserResponse>(user);
         }
+
+        public async Task<PagedList<UserResponse>> Handle(GetPaginatedUsersFavouriteNewsQuery request, CancellationToken cancellationToken)
+        {
+            DateTime startDate = DateTime.Parse(request.StartDate);
+            DateTime lastDate = DateTime.Parse(request.EndDate);
+            Expression<Func<Models.FavouriteNews, bool>>? filterBy = fNews => fNews.CreatedAt >= startDate;
+            filterBy = fnews => fnews.UpdatedAt <= lastDate;
+            var users = await _usersRepository.GetByNewsId(request.NewsId, filterBy, request.Page);
+            PagedList<UserResponse> pagedUsers = new PagedList<UserResponse>
+            {
+                Items = _mapper.Map<List<UserResponse>>(users.Items),
+                TotalCount = users.TotalCount,
+                TotalPages = users.TotalPages,
+                CurrentPage = users.CurrentPage,
+                PageSize = users.PageSize
+            };
+            return _mapper.Map<PagedList<UserResponse>>(pagedUsers);
+        }
+
+        //public Task<List<UserResponse>> Handle(GetUsersFavouriteNewsQuery request, CancellationToken cancellationToken)
+        //{
+
+        //    DateTime startDate = DateTime.Parse(request.StartDate);
+        //    DateTime lastDate = DateTime.Parse(request.EndDate);
+        //    Expression<Func<Models.FavouriteNews, bool>>? filterBy = fNews => fNews.CreatedAt >= startDate;
+        //    filterBy = fnews => fnews.UpdatedAt <= lastDate;
+        //    var users = await _usersRepository.GetByNewsId(request.NewsId, filterBy, request.Page);
+        //    return _mapper.Map<List<UserResponse>>(users);
+        //}
     }
 }

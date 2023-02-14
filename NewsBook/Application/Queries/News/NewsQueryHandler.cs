@@ -6,6 +6,7 @@ using NewsBook.Models.Paging;
 using NewsBook.Repository;
 using NewsBook.Response;
 using NuGet.Protocol.Plugins;
+using System.Linq.Expressions;
 
 namespace NewsBook.Mediator.Queries.News
 {
@@ -23,12 +24,14 @@ namespace NewsBook.Mediator.Queries.News
         }
         public async Task<List<Models.News>> Handle(GetNewsQuery request, CancellationToken cancellationToken)
         {
-            return await _newsRepository.GetAll(request.OrderBy, request.IsAscending);
+            Expression<Func<Models.News, bool>> filterBy = news => news.UserId == request.UserId;
+            return await _newsRepository.GetAll(request.OrderBy, request.IsAscending, filterBy);
         }
 
         public async Task<PagedList<NewsResponse>> Handle(GetPaginatedNewsQuery request, CancellationToken cancellationToken)
         {
-            var pagedNews = await _newsRepository.GetAll(request.Page, request.OrderBy, request.IsAscending);
+            Expression<Func<Models.News, bool>> filterBy = news => news.UserId == request.UserId;
+            var pagedNews = await _newsRepository.GetAll(request.Page, request.OrderBy, request.IsAscending, filterBy);
             var pagedNewsDTO = new PagedList<NewsResponse>
             {
                 Items = _mapper.Map<List<NewsResponse>>(pagedNews.Items),

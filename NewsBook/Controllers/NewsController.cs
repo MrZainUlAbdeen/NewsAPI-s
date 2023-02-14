@@ -32,6 +32,8 @@ namespace NewsBook.Controllers
             [FromQuery] bool usePaging,
             [FromQuery] bool isAscending,
             [FromQuery] string orderBy,
+            [FromQuery] string filterName,
+            [FromQuery] Guid userId,
             [FromQuery] PagingParameters pagingParameters
             )
         {
@@ -41,14 +43,17 @@ namespace NewsBook.Controllers
                     { 
                         Page = pagingParameters,
                         OrderBy = orderBy,
-                        IsAscending = isAscending
+                        IsAscending = isAscending,
+                        UserId = userId,
                     }
                 ));
             }
             var news = await _mediator.Send(new GetNewsQuery {
                     OrderBy = orderBy,
-                    IsAscending = isAscending
-                } 
+                    IsAscending = isAscending,
+                    UserId = userId,
+                    filterName = filterName
+            } 
             );
             return Ok(_mapper.Map<List<NewsResponse>>(news));
         }
