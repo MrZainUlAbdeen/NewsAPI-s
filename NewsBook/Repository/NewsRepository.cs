@@ -6,6 +6,7 @@ using NewsBook.Models.Paging;
 using NewsBook.Application.Extensions;
 using NewsBook.Core;
 using System.Linq.Expressions;
+using System.Linq;
 
 namespace NewsBook.Repository
 {
@@ -34,9 +35,10 @@ namespace NewsBook.Repository
             return news;
         }
 
-        public async Task<News> Update(Guid id, string title, string description)
+        public async Task<News> Update(string title, string description)
         {
-            var news = await GetById(id);
+            var userId = _identityServices.GetUserId() ?? Guid.Empty;
+            var news = await GetById(userId);
             if (news == null)
             {
                 return null;
@@ -64,37 +66,34 @@ namespace NewsBook.Repository
             return await _dbContext.News.FindAsync(id);
         }
 
-        public async Task<List<News>> GetAll(string orderBy, bool isAscending, Expression<Func<News, bool>>? filterBy
-            )
-        {
-            var queryable = FindAll();
-
-            //if (filterBy != null)
-            //{
-                //OrderByPropertyOrField(queryable, orderBy, isAscending);
-            //}
-
-            if (!string.IsNullOrEmpty(orderBy))
-            {
-                queryable = OrderByPropertyOrField(queryable, orderBy, isAscending);
-                //queryable.OrderByPropertyOrField(orderBy, isAscending);
-            }
-            //queryable = GetWithFilter(queryable,filterBy);
-            return await queryable.ToListAsync();
-        }
-
-        public async Task<PagedList<News>> GetAll(PagingParameters pagingParameters, string orderBy, bool isAscending, Expression<Func<News, bool>>? filterBy)
+        public async Task<List<News>> GetAll(string orderBy, bool isAscending, Expression<Func<News, bool>>? filterBy, Guid userId)
         {
             var queryable = FindAll();
 
             if (filterBy != null)
             {
-                queryable = queryable.Where(filterBy);
+                queryable = GetByUserId(queryable, userId, filterBy);
             }
-            
+
             if (!string.IsNullOrEmpty(orderBy))
             {
-                queryable.OrderByPropertyOrField(orderBy, isAscending);
+                queryable = OrderByPropertyOrField(queryable, orderBy, isAscending);
+            }
+            return await queryable.ToListAsync();
+        }
+
+        public async Task<PagedList<News>> GetAll(PagingParameters pagingParameters, string orderBy, bool isAscending, Expression<Func<News, bool>>? filterBy, Guid userId)
+        {
+            var queryable = FindAll();
+            
+            if (filterBy != null)
+            {
+                queryable = GetByUserId(queryable, userId, filterBy);
+            }
+           
+            if (!string.IsNullOrEmpty(orderBy))
+            {
+                queryable = OrderByPropertyOrField(queryable ,orderBy, isAscending);
             }
 
             return await PagedList<News>.ToPagedList(
@@ -152,6 +151,23 @@ namespace NewsBook.Repository
             _dbContext.News.Update(news);
             await _dbContext.SaveChangesAsync();
             return news;
+        }
+
+        public IQueryable<News> GetByUserId(
+            IQueryable<News> queryable,
+            Guid UeerId, Expression<Func<News, bool>> filterBy)
+        {
+            var usersQueryable = _dbContext.Users.Select(users => users);
+            if (filterBy != null)
+            {
+                queryable = queryable.Where(filterBy);
+            }
+            queryable = (from news in queryable
+                             join user in usersQueryable
+                             on news.UserId equals user.Id
+                             where news.UserId == UeerId
+                             select news);
+            return queryable;
         }
     }
 }

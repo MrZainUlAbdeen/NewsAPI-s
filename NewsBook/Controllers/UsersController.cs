@@ -35,11 +35,8 @@ namespace NewsBook.Controllers
             [FromQuery] bool usePaging,
             [FromQuery] bool isAscending,
             [FromQuery] string? orderBy,
-            [FromQuery] Guid newsID,
-            [FromQuery] string tableName,
-            [FromQuery] string filterList,
-            [FromQuery] string? startDate,
-            [FromQuery] string? endDate,
+            [FromQuery] string? tableAttribute,
+            [FromQuery] string? filterData,
             [FromQuery] PagingParameters pagingParameters
         )
         {
@@ -47,30 +44,30 @@ namespace NewsBook.Controllers
             {
                 var paginatedUsers = await _mediator.Send(new GetPaginatedUsersQuery {
                     Page = pagingParameters,
-                    StartTime = startDate,
-                    tableName=tableName,
-                    filterName = filterList,
-                    EndDate = endDate,
                     OrderBy = orderBy,
-                    IsAscending = isAscending
+                    IsAscending = isAscending,
+                    TableAttribute = tableAttribute,
+                    filterName = filterData
                 });
                 return Ok(paginatedUsers);
             }
 
             var user = await _mediator.Send(new GetUsersQuery {
                 OrderBy = orderBy,
-                IsAscending = isAscending
+                IsAscending = isAscending,
+                TableAttribute = tableAttribute,
+                filterName = filterData
             });
             return Ok(_mapper.Map<List<UserResponse>>(user));
         }
 
-        [HttpGet("(favouritenews/id)")]
+        [HttpGet("favouritenews/id")]
         public async Task<IActionResult> GetFavourite(
             [FromQuery] bool usePaging,
             [FromQuery] PagingParameters pagingParameters,
             Guid newsId, 
-            string? startDate, 
-            string? endDate)
+            DateTime? startDate, 
+            DateTime? endDate)
         {
             if (usePaging == true)
             {
@@ -83,7 +80,13 @@ namespace NewsBook.Controllers
                 });
                 return Ok(user);
             }
-            return Ok("Please Select Usepagination");
+            var users = await _mediator.Send(new GetUsersFavouriteNewsQuery
+            {
+                NewsId = newsId,
+                StartDate = startDate,
+                EndDate = endDate
+            });
+            return Ok(users);
         }
 
         [Authorize(Role.admin)]

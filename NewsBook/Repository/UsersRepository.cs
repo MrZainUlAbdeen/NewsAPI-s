@@ -1,51 +1,29 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using NewsBook.Application.Extensions;
+﻿using Microsoft.EntityFrameworkCore;
 using NewsBook.Core;
 using NewsBook.Data;
 using NewsBook.IdentityServices;
 using NewsBook.Models;
 using NewsBook.Models.Paging;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace NewsBook.Repository
 {
     public class UsersRepository : BaseRepository<User>, IUsersRepository
     {
-        //const int keySize = 64;
-        //const int iterations = 350000;
-        //HashAlgorithmName hashAlgorithm = HashAlgorithmName.SHA512;
-        private readonly DatabaseContext dbContext;
+        private readonly DatabaseContext _dbContext;
         private readonly IIdentityServices _identityServices;
-        private readonly INewsRepository _newsRepository;
         public UsersRepository(
             DatabaseContext dbContext,
-            IIdentityServices identityServices,
-            INewsRepository newsRepository
+            IIdentityServices identityServices
             ) : base(dbContext)
         {
-            _newsRepository = newsRepository;
-            _identityServices= identityServices;
-            this.dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _identityServices = identityServices;
-        }
-
-        public string HashPasword(string password)
-        {
-            return BCrypt.Net.BCrypt.HashPassword(password);
-        }
-
-        public bool VerifyPassword(string password, string passwordHash)
-        {
-            return BCrypt.Net.BCrypt.Verify(password, passwordHash);
         }
 
         public async Task<User?> CheckEmail(string email)
         {
-            return await _dbContext.Users.FirstOrDefaultAsync(value => value.Email.Equals(email));
+            return await base._dbContext.Users.FirstOrDefaultAsync(value => value.Email.Equals(email));
         }
         public async Task<User> Insert(string name, string email, string password)
         {
@@ -55,79 +33,58 @@ namespace NewsBook.Repository
                 Email = email,
                 Password = HashPasword(password),
             };
-            await dbContext.Users.AddAsync(user);
-            await dbContext.SaveChangesAsync();
+            await _dbContext.Users.AddAsync(user);
+            await _dbContext.SaveChangesAsync();
             return user;
         }
 
         public async Task<User> Update(User user)
         {
-            _dbContext.Users.Update(user);
-            await dbContext.SaveChangesAsync();
+            base._dbContext.Users.Update(user);
+            await _dbContext.SaveChangesAsync();
             return user;
         }
         public async Task<User> Delete(Guid id)
         {
             var user = await GetById(id);
             if (user != null) {
-                dbContext.Users.Remove(user);
+                _dbContext.Users.Remove(user);
             }
-            await dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
             return user;
         }
 
-        public async Task<List<User>> GetAll(string orderBy, bool isAscending = true)
+        public async Task<List<User>> GetAll(string tableAttribute, string filterName, string orderBy, bool isAscending = true)
         {
-            var queryable = FindAll();
-            if (!string.IsNullOrEmpty(orderBy))
-            {
-                OrderByPropertyOrField(queryable ,orderBy, isAscending);
-            }
+            var queryable = GetBySortFilter(tableAttribute, filterName, orderBy, isAscending);
             return await queryable.ToListAsync();
         }
 
-        public async Task<PagedList<User>> GetAll(string tableName ,
-            string filterName, 
-            string startDate, 
-            string endDate,
+        public async Task<PagedList<User>> GetAll(
             PagingParameters pagingParameters,
+            string tableAttribute, 
+            string filterName,
             string orderBy, 
             bool isAscending = true)
         {
-            //Expression<Func<User, bool>> expressions;
-            //expressions = user => user.Email == filterName;
-            //expressions = user => user.Name == startDate;
-
-            var queryable = FindAll();
-            //queryable = GetWithFilter(expressions);
-            //if (!string.IsNullOrEmpty(orderBy))
-            //{
-            //    queryable.OrderByPropertyOrField(orderBy, isAscending);
-            //}
-            //queryable = GetWithFilter(expressions);
-            //queryable = GetOrderInBetween(startDate, endDate);
-            //OrderByPropertyOrField(queryable, orderBy, isAscending);
-            //queryable = (IQueryable<User>)GetFiltering(queryable, filterName, startDate );
-            //queryable = Search(queryable, filterName);
-            //queryable = Filter(expressions);
-
-            queryable = GetFiltering(tableName, filterName, queryable);
+            var queryable = GetBySortFilter(tableAttribute, filterName, orderBy, isAscending);
             return await PagedList<User>.ToPagedList(
                 queryable,
                 pagingParameters.PageNumber,
                 pagingParameters.PageSize
             );
         }
+        
 
         public async Task<User> GetById(Guid id)
         {
-            var user = await dbContext.Users.FindAsync(id);
+            var user = await _dbContext.Users.FindAsync(id);
             return user;
         }
 
         public Task<User> GetByFilters(string email, string password)
         {
-            var user = _dbContext.Users.SingleOrDefaultAsync(authenticate =>
+            var user = base._dbContext.Users.SingleOrDefaultAsync(authenticate =>
             authenticate.Email == email);
             var hashPassword = !VerifyPassword(user.Result.Password, HashPasword(password));
             if (user.Equals(null) || hashPassword.Equals(null))
@@ -157,23 +114,60 @@ namespace NewsBook.Repository
             Expression<Func<FavouriteNews, bool>>? filterBy,
             PagingParameters pagingParameters)
         {
-            var fNewsQueryable = _dbContext.FavouriteNews.Select(fnews=> fnews);
-
-            if (filterBy != null)
-            {
-                fNewsQueryable = fNewsQueryable.Where(filterBy);
-            }
-            var queryable = (from user in _dbContext.Users
-                             join fnews in fNewsQueryable
-                             on user.Id equals fnews.UserId
-                             where fnews.IsFavorite == true && fnews.NewsId == NewsId
-                             select user);
-
-
+            var queryable = GetFilterByNewsId(NewsId, filterBy);
             return await PagedList<User>.ToPagedList(
                 queryable,
                 pagingParameters.PageNumber,
                 pagingParameters.PageSize);
+        }
+
+        public async Task<List<User>> GetByNewsId(
+            Guid NewsId,
+            Expression<Func<FavouriteNews, bool>>? filterBy)
+        {
+            var queryable = GetFilterByNewsId(NewsId, filterBy);
+            return await queryable.ToListAsync();
+        }
+
+        private IQueryable<User> GetFilterByNewsId(
+             Guid NewsId,
+            Expression<Func<FavouriteNews, bool>>? filterBy
+            )
+        {
+            var fNewsQueryable = base._dbContext.FavouriteNews.Select(fnews => fnews);
+            if (filterBy != null)
+            {
+                fNewsQueryable = fNewsQueryable.Where(filterBy);
+            }
+            var queryable = (from user in base._dbContext.Users
+                             join fnews in fNewsQueryable
+                             on user.Id equals fnews.UserId
+                             where fnews.IsFavorite == true && fnews.NewsId == NewsId
+                             select user);
+            return queryable;
+        }
+        private IQueryable<User> GetBySortFilter(string tableAttribute, string filterName, string orderBy, bool isAscending = true)
+        {
+            var queryable = FindAll();
+            if (!string.IsNullOrEmpty(orderBy))
+            {
+                queryable = OrderByPropertyOrField(queryable, orderBy, isAscending);
+            }
+            if (!string.IsNullOrEmpty(filterName) && !string.IsNullOrEmpty(tableAttribute))
+            {
+                queryable = GetWithFilter(tableAttribute, filterName, queryable);
+            }
+            return queryable;
+        }
+
+        private string HashPasword(string password)
+        {
+            return BCrypt.Net.BCrypt.HashPassword(password);
+        }
+
+        private bool VerifyPassword(string password, string passwordHash)
+        {
+            return BCrypt.Net.BCrypt.Verify(password, passwordHash);
         }
     }
 }

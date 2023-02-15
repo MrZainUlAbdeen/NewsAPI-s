@@ -12,12 +12,15 @@ namespace NewsBook.Repository
         Task<User> Update(string name, string password);
         Task<User> Delete(Guid id);
         Task<User?> CheckEmail(string email);
-        Task<PagedList<User>> GetAll(string tableName,string filtername, string startDate, string endDate, PagingParameters pagingParameters, string orderBy, bool isAscending = true);
-        Task<List<User>> GetAll(string orderBy, bool isAscending = true);
+        Task<PagedList<User>> GetAll(PagingParameters pagingParameters, string tableAttribute, string filterName,string orderBy, bool isAscending = true);
+        Task<List<User>> GetAll(string tableAttribute, string filterName, string orderBy, bool isAscending = true);
         Task<PagedList<User>> GetByNewsId(
             Guid NewsId, 
             Expression<Func<FavouriteNews, bool>>? filterBy,
             PagingParameters pagingParameters);
+        Task<List<User>> GetByNewsId(
+            Guid NewsId,
+            Expression<Func<FavouriteNews, bool>>? filterBy);
         Task<User> GetById(Guid id);
         Task<User> GetByFilters(string email, string password);
     }

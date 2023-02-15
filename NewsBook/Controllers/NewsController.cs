@@ -13,6 +13,7 @@ namespace NewsBook.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[Authorize]
     public class NewsController : ControllerBase
     {
         private readonly IMapper _mapper;
@@ -32,8 +33,9 @@ namespace NewsBook.Controllers
             [FromQuery] bool usePaging,
             [FromQuery] bool isAscending,
             [FromQuery] string orderBy,
-            [FromQuery] string filterName,
             [FromQuery] Guid userId,
+            [FromQuery] string createdDate,
+            [FromQuery] string updatedDate,
             [FromQuery] PagingParameters pagingParameters
             )
         {
@@ -45,6 +47,8 @@ namespace NewsBook.Controllers
                         OrderBy = orderBy,
                         IsAscending = isAscending,
                         UserId = userId,
+                        Startdate = createdDate,
+                        Lastdate = updatedDate
                     }
                 ));
             }
@@ -52,7 +56,8 @@ namespace NewsBook.Controllers
                     OrderBy = orderBy,
                     IsAscending = isAscending,
                     UserId = userId,
-                    filterName = filterName
+                    Startdate = createdDate,
+                    Lastdate = updatedDate
             } 
             );
             return Ok(_mapper.Map<List<NewsResponse>>(news));

@@ -6,7 +6,7 @@ namespace NewsBook.Application.Extensions
 {
     public static class QueriableExtender
     {
-        public static IQueryable<T> OrderByPropertyOrField<T>(this IQueryable<T> queryable, string propertyOrFieldName, bool ascending = true)
+        public static IQueryable<T> OrderByPropertyOrField<T>(this IQueryable<T> queryable, string propertyOrFieldName, bool ascending)
         {
             var elementType = typeof(T);
             var orderByMethodName = ascending ? "OrderBy" : "OrderByDescending";

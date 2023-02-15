@@ -11,7 +11,6 @@ namespace NewsBook.Mediator.Commands.News
 
     public class UpdateNewsQuery : IRequest<NewsResponse>
     {
-        public Guid Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
     }

@@ -31,8 +31,7 @@ namespace NewsBook.Mediator.Commands.News
 
         public async Task<NewsResponse> Handle(UpdateNewsQuery request, CancellationToken cancellationToken)
         {
-            var news = await _newsRepository.Update(request.Id,
-                request.Title, request.Description);
+            var news = await _newsRepository.Update(request.Title, request.Description);
             return _mapper.Map<NewsResponse>(news);
         }
     }

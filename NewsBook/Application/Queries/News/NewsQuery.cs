@@ -1,5 +1,4 @@
 ﻿using MediatR;
-using NewsBook.Models;
 using NewsBook.Models.Paging;
 using NewsBook.Response;
 
@@ -10,17 +9,18 @@ namespace NewsBook.Mediator.Queries.News
     {
         public string OrderBy { get; set; } = string.Empty;
         public bool IsAscending { get; set; } = true;
+        //for Filtering
+        public Guid UserId { get; set; } = Guid.Empty;
+        public string Startdate { get; set; } = string.Empty;
+        public string Lastdate { get; set; } = string.Empty;
     }
 
-    public class GetNewsQuery : BaseRequest<List<NewsBook.Models.News>>
+    public class GetNewsQuery : BaseRequest<List<Models.News>>
     {
-        public Guid UserId;
-        public string filterName;
     }
     public class GetPaginatedNewsQuery : BaseRequest<PagedList<NewsResponse>>
     {
-        public PagingParameters Page;
-        public Guid UserId;
+        public PagingParameters Page;   
     }
 
     public class GetNewsByIdQuery : IRequest<NewsResponse>

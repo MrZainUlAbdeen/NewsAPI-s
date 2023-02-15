@@ -7,22 +7,21 @@ namespace NewsBook.Mediator.Queries.Users
 {
     public class BaseRequest<T> : IRequest<T>
     {
-        public string OrderBy { get; set; } = string.Empty;
-        public bool IsAscending { get; set; } = true;
+        public string? OrderBy { get; set; } = string.Empty;
+        public bool IsAscending = true;
+        public Guid NewsId { get; set; }
+        public DateTime? StartDate;
+        public DateTime? EndDate;
+        public string? TableAttribute;
+        public string? filterName;
     }
 
-    public class GetPaginatedUsersFavouriteNewsQuery : IRequest<PagedList<UserResponse>>
+    public class GetPaginatedUsersFavouriteNewsQuery : BaseRequest<PagedList<UserResponse>>
     {
         public PagingParameters Page;
-        public Guid NewsId;
-        public string? StartDate;
-        public string? EndDate;
     }
-    public class GetUsersFavouriteNewsQuery : IRequest<List<UserResponse>>
+    public class GetUsersFavouriteNewsQuery : BaseRequest<List<UserResponse>>
     {
-        public Guid NewsId;
-        public string? StartDate;
-        public string? EndDate;
     }
 
     public class GetUsersQuery : BaseRequest<List<User>>
@@ -32,11 +31,6 @@ namespace NewsBook.Mediator.Queries.Users
     public class GetPaginatedUsersQuery : BaseRequest<PagedList<UserResponse>>
     {
         public PagingParameters Page;
-        public Guid userId;
-        public string StartTime;
-        public string EndDate;
-        public string tableName;
-        public string filterName;
     }
 
     public class GetUserByIdQuery : BaseRequest<UserResponse>
