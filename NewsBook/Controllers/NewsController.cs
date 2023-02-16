@@ -18,7 +18,6 @@ namespace NewsBook.Controllers
     {
         private readonly IMapper _mapper;
         private ISender _mediator;
-
         public NewsController(
             IMapper mapper,
             ISender mediator
@@ -32,10 +31,9 @@ namespace NewsBook.Controllers
         public async Task<IActionResult> Get(
             [FromQuery] bool usePaging,
             [FromQuery] bool isAscending,
-            [FromQuery] string orderBy,
-            [FromQuery] Guid userId,
-            [FromQuery] string createdDate,
-            [FromQuery] string updatedDate,
+            [FromQuery] string? orderBy,
+            [FromQuery] string? tableAttribute,
+            [FromQuery] string? filterName,
             [FromQuery] PagingParameters pagingParameters
             )
         {
@@ -46,21 +44,47 @@ namespace NewsBook.Controllers
                         Page = pagingParameters,
                         OrderBy = orderBy,
                         IsAscending = isAscending,
-                        UserId = userId,
-                        Startdate = createdDate,
-                        Lastdate = updatedDate
+                        TableAttribute = tableAttribute,
+                        FilterName = filterName   
                     }
                 ));
             }
             var news = await _mediator.Send(new GetNewsQuery {
                     OrderBy = orderBy,
                     IsAscending = isAscending,
-                    UserId = userId,
-                    Startdate = createdDate,
-                    Lastdate = updatedDate
+                    TableAttribute = tableAttribute,
+                    FilterName = filterName
             } 
             );
             return Ok(_mapper.Map<List<NewsResponse>>(news));
+        }
+
+        [HttpGet("user/news/id")]
+        public async Task<IActionResult> GetNews(
+            [FromQuery] bool? usePaging,
+            [FromQuery] PagingParameters pagingParameters,
+            [FromQuery] Guid? userId,
+            [FromQuery] DateTime? startDate,
+            [FromQuery] DateTime? endDate
+            )
+        {
+            if(usePaging == true)
+            {
+                return Ok(await _mediator.Send(new GetPaginatedUserNewsQuery
+                {
+                    Page = pagingParameters,
+                    UserId = userId,
+                    Startdate= startDate,
+                    Enddate = endDate
+                }));
+            }
+            return Ok(await _mediator.Send(new GetUserNewsQuery
+            {
+                UserId = userId,
+                Startdate = startDate,
+                Enddate = endDate
+            }));
+
         }
 
         [HttpGet]

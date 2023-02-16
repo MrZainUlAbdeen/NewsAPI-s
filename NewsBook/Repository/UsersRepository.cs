@@ -82,12 +82,12 @@ namespace NewsBook.Repository
             return user;
         }
 
-        public Task<User> GetByFilters(string email, string password)
+        public async Task<User> GetByFilters(string email, string password)
         {
-            var user = base._dbContext.Users.SingleOrDefaultAsync(authenticate =>
+            var user = await _dbContext.Users.SingleOrDefaultAsync(authenticate =>
             authenticate.Email == email);
-            var hashPassword = !VerifyPassword(user.Result.Password, HashPasword(password));
-            if (user.Equals(null) || hashPassword.Equals(null))
+            var hashPassword = !VerifyPassword(user.Password, HashPasword(password));
+            if (user.Equals(null) || hashPassword.Equals(false))
             {
                 return null;
             }
