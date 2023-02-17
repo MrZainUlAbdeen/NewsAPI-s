@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using NewsBook.ModelDTO.News;
 using NewsBook.Models;
+using NewsBook.Response;
 
 namespace NewsBook.MappingProfiles
 {
@@ -8,7 +8,7 @@ namespace NewsBook.MappingProfiles
     {
         public NewsProfile()
         {
-            CreateMap<News, NewsReadDTO>().ForMember(dest => dest.NewsId, opt => opt.MapFrom(src => src.Id));
+            CreateMap<News, NewsResponse>().ForMember(dest => dest.NewsId, opt => opt.MapFrom(src => src.Id));
         }
     }
 }

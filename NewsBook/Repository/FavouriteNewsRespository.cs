@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NewsBook.Core;
 using NewsBook.Data;
 using NewsBook.IdentityServices;
 using NewsBook.Models;
@@ -6,7 +7,7 @@ using NewsBook.Models.Paging;
 
 namespace NewsBook.Repository
 {
-    public class FavouriteNewsRespository : NewsBase<FavouriteNews>, IFavouriteNewsRespository
+    public class FavouriteNewsRespository : BaseRepository<FavouriteNews>, IFavouriteNewsRespository
     {
         private readonly DatabaseContext _dbContext;
         private readonly INewsRepository _newsRepository;
@@ -78,6 +79,7 @@ namespace NewsBook.Repository
 
         public async Task<FavouriteNews> Update(FavouriteNews favouriteNews)
         {
+            _dbContext.FavouriteNews.Update(favouriteNews);
             await _dbContext.SaveChangesAsync();
             return favouriteNews;
         }

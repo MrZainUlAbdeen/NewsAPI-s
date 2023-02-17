@@ -23,7 +23,7 @@ namespace NewsBook.Authorization
             if (userId != null)
             {
                 // attach user to context on successful jwt validation
-                context.Items["User"] = await userRepository.GetById(userId.Value);     
+                context.Items["User"] = await userRepository.GetById(userId.Value); 
             }
             await _next(context);
         }

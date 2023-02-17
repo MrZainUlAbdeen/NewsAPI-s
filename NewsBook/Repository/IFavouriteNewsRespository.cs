@@ -1,5 +1,6 @@
 ﻿using NewsBook.Models.Paging;
 using NewsBook.Models;
+using NewsBook.Core;
 
 namespace NewsBook.Repository
 {

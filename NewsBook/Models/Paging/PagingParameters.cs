@@ -16,7 +16,5 @@
                 _pageSize = value > MaxPageSize ? MaxPageSize : value;
             }
         }
-
-        
     }
 }
