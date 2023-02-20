@@ -31,8 +31,14 @@ namespace NewsBook.Repository
             {
                 Name = name,
                 Email = email,
-                Password = HashPasword(password),
+                Password = HashPasword(password)
             };
+            await Add(user);
+            return user;
+        }
+
+        private async Task<User> Add(User user)
+        {
             await _dbContext.Users.AddAsync(user);
             await _dbContext.SaveChangesAsync();
             return user;
@@ -47,7 +53,8 @@ namespace NewsBook.Repository
         public async Task<User> Delete(Guid id)
         {
             var user = await GetById(id);
-            if (user != null) {
+            if (user != null) 
+            {
                 _dbContext.Users.Remove(user);
             }
             await _dbContext.SaveChangesAsync();

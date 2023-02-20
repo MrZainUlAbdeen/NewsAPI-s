@@ -37,8 +37,9 @@ namespace NewsBook
             builder.Services.AddScoped<INewsRepository, NewsRepository>();
             builder.Services.AddScoped<IUsersRepository, UsersRepository>();
             builder.Services.AddScoped<IFavouriteNewsRespository, FavouriteNewsRespository>();
+            builder.Services.AddScoped<IImageRepository, ImageRepository>();
             builder.Services.AddScoped<IJwtUtils, JWTService>();
-            builder.Services.AddScoped<IIdentityServices, NewsBook.IdentityServices.IdentityServices>();
+            builder.Services.AddScoped<IIdentityServices, IdentityServices.IdentityServices>();
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             builder.Services.AddMediatR(typeof(Program).Assembly);
             var app = builder.Build();

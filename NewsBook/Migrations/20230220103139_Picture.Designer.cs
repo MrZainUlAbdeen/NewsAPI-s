@@ -12,8 +12,8 @@ using NewsBook.Data;
 namespace NewsBook.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20230206084415_CreateTables")]
-    partial class CreateTables
+    [Migration("20230220103139_Picture")]
+    partial class Picture
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -86,6 +86,32 @@ namespace NewsBook.Migrations
                     b.ToTable("News");
                 });
 
+            modelBuilder.Entity("NewsBook.Models.Picture", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Profile")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Pictures");
+                });
+
             modelBuilder.Entity("NewsBook.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -97,11 +123,12 @@ namespace NewsBook.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -114,6 +141,9 @@ namespace NewsBook.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
@@ -148,6 +178,17 @@ namespace NewsBook.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("NewsBook.Models.Picture", b =>
+                {
+                    b.HasOne("NewsBook.Models.User", "User")
+                        .WithMany("Profile")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("NewsBook.Models.News", b =>
                 {
                     b.Navigation("FavouriteNews");
@@ -158,6 +199,8 @@ namespace NewsBook.Migrations
                     b.Navigation("FavouriteNews");
 
                     b.Navigation("News");
+
+                    b.Navigation("Profile");
                 });
 #pragma warning restore 612, 618
         }

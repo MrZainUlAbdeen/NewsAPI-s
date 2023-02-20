@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NewsBook.Data;
 
@@ -11,9 +12,11 @@ using NewsBook.Data;
 namespace NewsBook.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20230217105624_createtables")]
+    partial class createtables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -47,8 +50,7 @@ namespace NewsBook.Migrations
 
                     b.HasIndex("NewsId");
 
-                    b.HasIndex("UserId", "NewsId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("FavouriteNews");
                 });
@@ -83,32 +85,6 @@ namespace NewsBook.Migrations
                     b.ToTable("News");
                 });
 
-            modelBuilder.Entity("NewsBook.Models.Picture", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Profile")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Pictures");
-                });
-
             modelBuilder.Entity("NewsBook.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -131,6 +107,10 @@ namespace NewsBook.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Picture")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Role")
                         .HasColumnType("int");
 
@@ -150,13 +130,13 @@ namespace NewsBook.Migrations
                     b.HasOne("NewsBook.Models.News", "News")
                         .WithMany("FavouriteNews")
                         .HasForeignKey("NewsId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("NewsBook.Models.User", "User")
                         .WithMany("FavouriteNews")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("News");
@@ -175,17 +155,6 @@ namespace NewsBook.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("NewsBook.Models.Picture", b =>
-                {
-                    b.HasOne("NewsBook.Models.User", "User")
-                        .WithMany("Profile")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("NewsBook.Models.News", b =>
                 {
                     b.Navigation("FavouriteNews");
@@ -196,8 +165,6 @@ namespace NewsBook.Migrations
                     b.Navigation("FavouriteNews");
 
                     b.Navigation("News");
-
-                    b.Navigation("Profile");
                 });
 #pragma warning restore 612, 618
         }

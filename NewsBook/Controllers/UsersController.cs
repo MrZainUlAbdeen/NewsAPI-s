@@ -98,15 +98,16 @@ namespace NewsBook.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] InsertUserQuery insertUser)
-        {            
+        //public async Task<IActionResult> Post([FromBody] InsertUserCommand insertUser)
+        public async Task<IActionResult> Post(InsertUserCommand insertUser)
+        {
             return Ok(await _mediator.Send(insertUser));
         }
 
         [AllowAnonymous]
         [HttpPut]
         public async Task<IActionResult> Put(
-            [FromBody] UpdateUserQuery updateUser
+            [FromBody] UpdateUserCommand updateUser
             )
         {
             return Ok(await _mediator.Send(updateUser));
@@ -115,12 +116,12 @@ namespace NewsBook.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            return Ok(await _mediator.Send(new DeleteUserQuery { Id = id }));
+            return Ok(await _mediator.Send(new DeleteUserCommand { Id = id }));
         }
 
         [AllowAnonymous]
         [HttpPost("authenticate")]
-        public async Task<IActionResult> Authenticate(UserLoginQuery userLogin)
+        public async Task<IActionResult> Authenticate(UserLoginCommand userLogin)
         {
             var user = await _mediator.Send(userLogin);
             if(user == null)

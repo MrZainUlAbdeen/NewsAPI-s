@@ -8,7 +8,7 @@ namespace NewsBook.Data
     {
         public void Configure(EntityTypeBuilder<User> builder)
         {
-           // builder.HasMany(user => user.favouriteNews).WithOne(favouriteNews => favouriteNews.User).OnDelete(DeleteBehavior.Cascade);
+           //builder.HasMany(user => user.FavouriteNews).WithOne(favouriteNews => favouriteNews.User).OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

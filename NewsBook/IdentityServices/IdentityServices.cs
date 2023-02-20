@@ -13,7 +13,6 @@ namespace NewsBook.IdentityServices
         {
             return GetUser()?.Id;
         }
-
         private User? GetUser()
         {
             return (User?)_httpContextAccessor.HttpContext?.Items.FirstOrDefault(item => item.Key.Equals("User")).Value;
